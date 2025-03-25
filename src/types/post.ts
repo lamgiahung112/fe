@@ -4,6 +4,7 @@ type Post = {
 	attachmentUrl: string
 	createdAt: number
 	editedAt: number
+	isLiked: boolean
 }
 
 export type { Post }
