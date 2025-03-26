@@ -186,7 +186,7 @@ function UserListDialog({
 									key={user.id}
 									className="flex cursor-pointer items-center gap-3 rounded-md p-2 hover:bg-accent"
 									onClick={() => {
-										navigate(`/users/${user.username}`)
+										navigate(`/users/${user.id}`)
 										setIsOpen(false)
 									}}
 								>
