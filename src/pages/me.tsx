@@ -1,7 +1,6 @@
 import useUser from "@/stores/user-store"
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
-import { SetStateAction, useEffect, useState } from "react"
-import { format } from "date-fns"
+import { useEffect, useState } from "react"
 import {
 	Dialog,
 	DialogContent,
@@ -148,7 +147,7 @@ export default function MePage() {
 
 			{/* Posts Section */}
 			<div className="mx-auto mt-8 max-w-2xl space-y-6">
-				{posts.map((post) => (
+				{posts?.map((post) => (
 					<PostUI postId={post.id} key={post.id} />
 				))}
 			</div>

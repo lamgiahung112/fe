@@ -10,6 +10,7 @@ import { MessageCircle, ThumbsUp } from "lucide-react"
 import likePostApi from "@/apis/like_post"
 import unlikePostApi from "@/apis/unlike_post"
 import { cn } from "@/lib/utils"
+import CommentSection from "@/components/comment.tsx"
 
 interface PostProps {
 	postId: string
@@ -18,6 +19,7 @@ interface PostProps {
 export default function PostUI({ postId }: PostProps) {
 	const [post, setPost] = useState<Post | null>(null)
 	const [user, setUser] = useState<User | null>(null)
+	const [isCommentOpen, setIsCommentOpen] = useState(false)
 
 	useEffect(() => {
 		postByIdApi(postId).then(setPost)
@@ -93,10 +95,11 @@ export default function PostUI({ postId }: PostProps) {
 						{post.isLiked && <ThumbsUp className="h-5 w-5 text-blue-400" />}
 						<span className={cn(post.isLiked && "text-blue-400")}>Like</span>
 					</Button>
-					<Button variant="ghost" className="flex flex-1 items-center gap-2">
+					<Button onClick={() => setIsCommentOpen(true)} variant="ghost" className="flex flex-1 items-center gap-2">
 						<MessageCircle className="h-5 w-5" />
 						<span>Comments</span>
 					</Button>
+					<CommentSection postId={postId} isOpen={isCommentOpen} setIsOpen={setIsCommentOpen}/>
 				</div>
 			</CardContent>
 		</Card>

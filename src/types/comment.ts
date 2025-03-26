@@ -4,8 +4,9 @@ type Comment = {
 	attachmentUrl: string
 	createdAt: number
 	editedAt: number
-	likeCount: number
-	commentCount: number
+	creatorName: string
+	creatorAvatarUrl: string
+	creatorId: string
 }
 
 export type { Comment }
