@@ -18,7 +18,7 @@ export default function LoginPage() {
 
 	useEffect(() => {
 		if (isAuthenticated) {
-			navigate("/")
+			navigate("/messenger")
 		}
 	}, [isAuthenticated])
 

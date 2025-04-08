@@ -5,7 +5,7 @@ import { memo, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
 function SearchPage() {
-	const [params, setParams] = useSearchParams()
+	const [params] = useSearchParams()
 	const keyword = useMemo(() => params.get("keyword"), [params])
 	const [userByUsername, setUserByUsername] = useState("")
 	const [usersByName, setUsersByName] = useState<string[]>([])
@@ -26,6 +26,12 @@ function SearchPage() {
 			.finally(() => setIsLoading(false))
 	}, [keyword])
 
+	if (isLoading) {
+		return (
+			<div>Searching...</div>
+		)
+	}
+
 	return (
 		<div className="container mx-auto p-4">
 			<div className="text-lg font-medium">
@@ -34,11 +40,11 @@ function SearchPage() {
 			<div className="mt-4 grid grid-cols-2 gap-4">
 				<div className="rounded bg-gray-100 p-4 text-center">
 					<h3>Users Matched</h3>
-					<p>{usersByName.length + (userByUsername ? 1 : 0)}</p>
+					<p>{usersByName?.length + (userByUsername ? 1 : 0)}</p>
 				</div>
 				<div className="rounded bg-gray-100 p-4 text-center">
 					<h3>Posts Matched</h3>
-					<p>{postsByCaption.length}</p>
+					<p>{postsByCaption?.length ?? 0}</p>
 				</div>
 			</div>
 			<div className="mt-4 border-t pt-4">
