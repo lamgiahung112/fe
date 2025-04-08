@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { User, Lock, Image } from "lucide-react";
+import {User, Lock, Image, LucideMailOpen} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom"
@@ -59,24 +59,30 @@ export default function RegisterPage() {
 
 				<div className="mb-4">
 					<label className="block text-gray-700 font-medium mb-1">Name</label>
-					<Input
-						type="text"
-						placeholder="Enter your name"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-0 focus-visible:ring-0"
-					/>
+					<div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50">
+						<User className="w-5 h-5 text-gray-500" />
+						<Input
+							type="text"
+							placeholder="Enter your name"
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+							className="flex-1 bg-transparent border-none  outline-none focus:ring-0 focus-visible:ring-0"
+						/>
+					</div>
 				</div>
 
 				<div className="mb-4">
 					<label className="block text-gray-700 font-medium mb-1">Email</label>
-					<Input
-						type="email"
-						placeholder="Enter your email"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-						className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-0 focus-visible:ring-0"
-					/>
+					<div className="flex items-center border rounded-lg px-3 py-2 bg-gray-50">
+						<LucideMailOpen className="w-5 h-5 text-gray-500" />
+						<Input
+							type="email"
+							placeholder="Enter your email"
+							value={email}
+							onChange={(e) => setEmail(e.target.value)}
+							className="flex-1 bg-transparent border-none  outline-none focus:ring-0 focus-visible:ring-0"
+						/>
+					</div>
 				</div>
 
 				<div className="mb-4">
@@ -126,6 +132,9 @@ export default function RegisterPage() {
 
 				<p className="mt-4 text-sm text-center text-gray-600">
 					Already have an account? <Link to="/login" className="text-blue-600 hover:underline">Login here</Link>
+				</p>
+				<p className="mt-4 text-sm text-center text-gray-600">
+					Forgot your password? <Link to="/forget_password" className="text-blue-600 hover:underline">Click here</Link>
 				</p>
 			</div>
 		</div>

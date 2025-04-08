@@ -18,7 +18,7 @@ export default function LoginPage() {
 
 	useEffect(() => {
 		if (isAuthenticated) {
-			navigate("/users/55afd861-1c9f-4973-9e9b-d1b6a67f7398")
+			navigate("/")
 		}
 	}, [isAuthenticated])
 
@@ -70,6 +70,9 @@ export default function LoginPage() {
 					<Link to="/register" className="text-blue-600 hover:underline">
 						Click here to sign up!
 					</Link>
+				</p>
+				<p className="mt-4 text-sm text-center text-gray-600">
+					Forgot your password? <Link to="/forget_password" className="text-blue-600 hover:underline">Click here</Link>
 				</p>
 			</div>
 		</div>

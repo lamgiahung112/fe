@@ -9,6 +9,7 @@ import Authenticated from "./pages/authenticated"
 import UserDetailPage from "./pages/user-detail"
 import HomePage from "./pages/home"
 import SearchPage from "./pages/search"
+import ForgetPasswordPage from "@/pages/forget_password.tsx";
 
 const routes = [
 	{ path: "/login", element: <LoginPage /> },
@@ -45,6 +46,12 @@ const routes = [
 			</Authenticated>
 		),
 	},
+	{
+		path: "/forget_password",
+		element: (
+			<ForgetPasswordPage />
+		),
+	}
 ]
 
 function App() {
