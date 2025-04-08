@@ -9,6 +9,7 @@ export default function RegisterPage() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [name, setName] = useState("");
+	const [email, setEmail] = useState("");
 	const [excerpt, setExcerpt] = useState("");
 	const [avatar, setAvatar] = useState<File | null>(null);
 	const {register, isAuthenticated} = useUser()
@@ -24,7 +25,7 @@ export default function RegisterPage() {
 		if (!avatar) {
 			return
 		}
-		register(username, password, name, excerpt, avatar).then((ok) => {
+		register(username, password, name, excerpt, avatar, email).then((ok) => {
 			if (ok) {
 				navigate("/login");
 			}
@@ -63,6 +64,17 @@ export default function RegisterPage() {
 						placeholder="Enter your name"
 						value={name}
 						onChange={(e) => setName(e.target.value)}
+						className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-0 focus-visible:ring-0"
+					/>
+				</div>
+
+				<div className="mb-4">
+					<label className="block text-gray-700 font-medium mb-1">Email</label>
+					<Input
+						type="email"
+						placeholder="Enter your email"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
 						className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-0 focus-visible:ring-0"
 					/>
 				</div>

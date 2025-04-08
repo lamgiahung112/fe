@@ -21,8 +21,8 @@ const useUser = create<UserStoreState & UserStoreAction>((set) => {
 		login(username: string, password: string): Promise<boolean> {
 			return loginApi(username, password)
 		},
-		register(username: string, password: string, name: string, excerpt: string, avatar: File): Promise<boolean> {
-			return registerApi(username, password, name, excerpt, avatar)
+		register(username: string, password: string, name: string, excerpt: string, avatar: File, email: string): Promise<boolean> {
+			return registerApi(username, password, name, excerpt, avatar, email)
 		},
 	}
 })
@@ -34,7 +34,7 @@ type UserStoreState = {
 
 type UserStoreAction = {
 	login(username: string, password: string): Promise<boolean>
-	register(username: string, password: string, name: string, excerpt: string, avatar: File): Promise<boolean>
+	register(username: string, password: string, name: string, excerpt: string, avatar: File, email: string): Promise<boolean>
 	getDetail(): Promise<void>
 }
 
