@@ -6,11 +6,12 @@ import whoamiApi from "@/apis/whoami.ts"
 
 const useUser = create<UserStoreState & UserStoreAction>((set) => {
 	return {
-		user: null,
-		isAuthenticated: false,
+		user: JSON.parse(localStorage.getItem("user") ?? "null"),
+		isAuthenticated: !!JSON.parse(localStorage.getItem("user") ?? "null"),
 		async getDetail(): Promise<void> {
 			const data = await whoamiApi()
 			if (!data) return
+			localStorage.setItem("user", JSON.stringify(data))
 			set(() => {
 				return {
 					user: data,

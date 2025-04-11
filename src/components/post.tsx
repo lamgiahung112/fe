@@ -11,6 +11,7 @@ import likePostApi from "@/apis/like_post"
 import unlikePostApi from "@/apis/unlike_post"
 import { cn } from "@/lib/utils"
 import CommentSection from "@/components/comment.tsx"
+import { Link } from "react-router-dom"
 
 interface PostProps {
 	postId: string
@@ -40,14 +41,9 @@ export default function PostUI({ postId }: PostProps) {
 				/>
 				<div className="flex flex-col">
 					<span className="font-semibold">{user!.name}</span>
-					<div className="text-sm text-muted-foreground">
+					<Link to={`/post?post=${post.id}`} className="text-sm text-muted-foreground hover:underline">
 						{format(post.createdAt * 1000, "MMM d, yyyy HH:mm")}
-						{post.editedAt !== 0 && (
-							<span className="ml-2 italic">
-								(edited {format(post.editedAt * 1000, "MMM d, yyyy HH:mm")})
-							</span>
-						)}
-					</div>
+					</Link>
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-4">

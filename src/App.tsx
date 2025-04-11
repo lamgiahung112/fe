@@ -11,6 +11,7 @@ import HomePage from "./pages/home"
 import SearchPage from "./pages/search"
 import ForgetPasswordPage from "@/pages/forget_password.tsx";
 import MessengerPage from "@/pages/messenger.tsx"
+import PostPage from "@/pages/post.tsx"
 
 const routes = [
 	{ path: "/login", element: <LoginPage /> },
@@ -59,6 +60,12 @@ const routes = [
 			<Authenticated>
 				<MessengerPage />
 			</Authenticated>
+		)
+	},
+	{
+		path: "/post",
+		element: (
+			<PostPage />
 		)
 	}
 ]

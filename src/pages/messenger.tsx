@@ -6,7 +6,7 @@ import {
 	Phone,
 	Video,
 	Search,
-	ArrowUp
+	ArrowUp, LogOut, UserPlus, MessageSquare, CheckCircle
 } from "lucide-react"
 import { Conversation } from "@/types/conversation.ts"
 import getConversationsApi from "@/apis/get_conversations.ts"
@@ -18,6 +18,13 @@ import usersInConversationApi from "@/apis/users_in_conversation.ts"
 import getMessagesApi from "@/apis/get_messages.ts"
 import createMessage from "@/apis/create_message.ts"
 import useUser from "@/stores/user-store.ts"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx"
+import changeConversationNameApi from "@/apis/change_conversation_name.ts"
+import { toast } from "react-toastify"
+import useNewsfeed from "@/stores/newsfeed-store.ts"
+import addUserToConversationApi from "@/apis/add_user_to_conversation.ts"
+import userLeaveConversationApi from "@/apis/user_leave_conversation.ts"
+import { useNavigate } from "react-router-dom"
 
 // Header component for conversation list
 const ConversationHeader: React.FC = () => (
@@ -41,6 +48,7 @@ interface ConversationItemProps {
 
 // Single conversation item component
 const ConversationItem: React.FC<ConversationItemProps> = ({ conversation, isSelected, onClick }) => {
+	const {user} = useUser()
 	const [lastMessage, setLastMessage] = useState<Message | null>(null)
 
 	useEffect(() => {
@@ -52,21 +60,28 @@ const ConversationItem: React.FC<ConversationItemProps> = ({ conversation, isSel
 		}
 	}, [conversation])
 
-	return <div
-		className={`flex items-center p-3 cursor-pointer hover:bg-gray-50 ${isSelected ? 'bg-blue-50' : ''}`}
-		onClick={onClick}
-	>
-		<div className="ml-3 flex-1">
-			<div className="flex justify-between items-center">
-				<h3 className={`text-lg font-medium `}>{conversation.name}</h3>
-				<span className={`text-xs 'text-gray-500'`}>{format(conversation.updatedAt * 1000, "MMM d, yyyy HH:mm")}</span>
+	return (
+		<div
+			className={`flex cursor-pointer items-center p-3 hover:bg-gray-50 ${
+				isSelected ? "bg-blue-50" : ""
+			}`}
+			onClick={onClick}
+		>
+			<div className="ml-3 flex-1">
+				<div className="flex items-center justify-between">
+					<h3 className={`text-lg font-medium `}>{conversation.name}</h3>
+					<span className={`'text-gray-500' text-xs`}>
+						{format(conversation.updatedAt * 1000, "MMM d, yyyy HH:mm")}
+					</span>
+				</div>
+				<p className={`'text-gray-500'} truncate text-sm`}>
+					{!!lastMessage && !!lastMessage.text && `${lastMessage.userName === user?.username ? "You" : lastMessage.userName}: ${lastMessage.text}`}
+					{!!lastMessage && !lastMessage.text && lastMessage.attachmentUrl && `${lastMessage.userName === user?.username ? "You" : lastMessage.userName}: sent an attachment`}
+					{!lastMessage && "Let's start a conversation"}
+				</p>
 			</div>
-			<p className={`text-sm truncate 'text-gray-500'}`}>
-				{!!lastMessage && !!lastMessage.text && lastMessage.text}
-				{!lastMessage && "Let's start a conversation"}
-			</p>
 		</div>
-	</div>
+	)
 }
 
 // Props for ConversationList component
@@ -107,15 +122,206 @@ const ConversationList: React.FC<ConversationListProps> = ({ selectedId, onSelec
 	</div>
 }
 
+const PopupMenu: React.FC<{
+	isOpen: boolean;
+	openDialog: (dialogType: string) => void;
+}> = ({ isOpen, openDialog }) => {
+	if (!isOpen) return null;
+
+	return (
+		<div className="absolute right-0 top-12 bg-white shadow-lg rounded-md border z-50 w-60">
+			<ul className="py-1">
+				<li
+					className="px-4 py-2 hover:bg-gray-100 flex items-center cursor-pointer"
+					onClick={() => openDialog('addMember')}
+				>
+					<UserPlus size={16} className="mr-2" />
+					<span>Add Member</span>
+				</li>
+				<li
+					className="px-4 py-2 hover:bg-gray-100 flex items-center cursor-pointer"
+					onClick={() => openDialog('changeName')}
+				>
+					<MessageSquare size={16} className="mr-2" />
+					<span>Change Conversation Name</span>
+				</li>
+				<li
+					className="px-4 py-2 hover:bg-gray-100 flex items-center cursor-pointer text-orange-500"
+					onClick={() => openDialog('leave')}
+				>
+					<LogOut size={16} className="mr-2" />
+					<span>Leave Chat</span>
+				</li>
+			</ul>
+		</div>
+	);
+};
+
 // Props for MessageHeader component
 interface MessageHeaderProps {
 	conversation: Conversation | undefined;
 	users: User[]
 }
 
+const AddMemberDialog: React.FC<{ isOpen: boolean; onClose: () => void, users: User[], conversation: Conversation }> = ({ isOpen, onClose, users, conversation }) => {
+	const {followers} = useNewsfeed()
+	const {user} = useUser()
+	const [search, setSearch] = useState("")
+	const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+
+	return (
+		<Dialog open={isOpen} onOpenChange={onClose}>
+			<DialogContent className="sm:max-w-[425px]">
+				<DialogHeader>
+					<DialogTitle>Add New Member</DialogTitle>
+				</DialogHeader>
+				<div className="mb-4">
+					<input
+						type="text"
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+						placeholder="Search users..."
+						className="w-full p-2 border rounded-md"
+					/>
+				</div>
+				{
+					followers && followers.filter(x => x.id !== user?.id && !users.find(u => u.id === x.id)).map(follower => (
+						<div
+							onClick={() => {
+								if (selectedUsers.includes(follower.id)) {
+									setSelectedUsers(selectedUsers.filter(x => x !== follower.id))
+									return
+								}
+								setSelectedUsers(selectedUsers.concat([follower.id]))
+							}}
+							className="flex items-center space-x-2 cursor-pointer hover:bg-neutral-200 p-4 rounded-sm max-h-[400px] overflow-auto">
+							{selectedUsers.includes(follower.id) && <CheckCircle className="w-5 h-5 text-green-500" />}
+							{!selectedUsers.includes(follower.id) && (<div className="w-5 h-5"></div>)}
+							<img src={`http://localhost:8080/files/${follower.avatarUrl}`} className="w-10 h-10 rounded-full" />
+							<h2>{follower.name}</h2>
+						</div>
+					))
+				}
+				<div className="flex justify-end space-x-2">
+					<button
+						className="px-4 py-2 bg-gray-200 rounded-md"
+						onClick={onClose}
+					>
+						Cancel
+					</button>
+					<button onClick={() => {
+						if (!selectedUsers) {
+							return
+						}
+						addUserToConversationApi(conversation.id, selectedUsers).then(() => {
+							toast.success("Add user to conversation successfully.")
+							users.concat(followers.filter(x => selectedUsers.includes(x.id)))
+						}).catch(() => {
+							toast.error("Could not add user to conversation.")
+						})
+					}} className="px-4 py-2 bg-blue-500 text-white rounded-md">
+						Add
+					</button>
+				</div>
+			</DialogContent>
+		</Dialog>
+	);
+};
+
+const ChangeConversationNameDialog: React.FC<{ isOpen: boolean; onClose: () => void, conversation: Conversation }> = ({ isOpen, onClose, conversation }) => {
+	const [name, setName] = useState("");
+
+	function onClick() {
+		changeConversationNameApi(conversation.id, name).then(() => {
+			toast.success("Conversation name successfully updated");
+		}).catch(() => {
+			toast.error("There was an error updating conversation");
+		}).finally(() => {
+			conversation.name = name;
+			onClose()
+		})
+	}
+	return (
+		<Dialog open={isOpen} onOpenChange={onClose}>
+			<DialogContent className="sm:max-w-[425px]">
+				<DialogHeader>
+					<DialogTitle>Change conversation name</DialogTitle>
+				</DialogHeader>
+				<div className="mb-4">
+					<input
+						type="text"
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+						placeholder="Conversation name"
+						className="w-full p-2 border rounded-md"
+					/>
+				</div>
+				<div className="flex justify-end space-x-2">
+					<button
+						className="px-4 py-2 bg-gray-200 rounded-md"
+						onClick={onClose}
+					>
+						Cancel
+					</button>
+					<button onClick={onClick} className="px-4 py-2 bg-blue-500 text-white rounded-md">
+						Confirm
+					</button>
+				</div>
+			</DialogContent>
+		</Dialog>
+	);
+};
+
+const LeaveChatDialog: React.FC<{ isOpen: boolean; onClose: () => void, conversation: Conversation }> = ({ isOpen, onClose, conversation }) => {
+	return (
+		<Dialog open={isOpen} onOpenChange={onClose}>
+			<DialogContent className="sm:max-w-[425px]">
+				<DialogHeader>
+					<DialogTitle>Are you sure you want to leave this chat?</DialogTitle>
+				</DialogHeader>
+				<div className="flex justify-end space-x-2">
+					<button
+						className="px-4 py-2 bg-gray-200 rounded-md"
+						onClick={onClose}
+					>
+						Cancel
+					</button>
+					<button onClick={() => {
+						userLeaveConversationApi(conversation.id).then(() => {
+							window.location.reload()
+						})
+					}} className="px-4 py-2 bg-blue-500 text-white rounded-md">
+						Confirm
+					</button>
+				</div>
+			</DialogContent>
+		</Dialog>
+	);
+};
+
 // Message header component
-const MessageHeader: React.FC<MessageHeaderProps> = ({ conversation, users }) => (
-	<div className="p-3 border-b flex items-center justify-between bg-white shadow-sm">
+const MessageHeader: React.FC<MessageHeaderProps> = ({ conversation, users }) => {
+	const [isPopupOpen, setIsPopupOpen] = useState(false);
+	const [activeDialog, setActiveDialog] = useState<string | null>(null);
+
+	const togglePopup = () => {
+		setIsPopupOpen(!isPopupOpen);
+	};
+
+	const closePopup = () => {
+		setIsPopupOpen(false);
+	};
+
+	const openDialog = (dialogType: string) => {
+		setActiveDialog(dialogType);
+		closePopup();
+	};
+
+	const closeDialog = () => {
+		setActiveDialog(null);
+	};
+
+	return <div className="p-3 border-b flex items-center justify-between bg-white shadow-sm">
 		<div className="flex items-center">
 			<div className="flex flex-col ml-3">
 				<h2 className="font-semibold">{conversation?.name}</h2>
@@ -129,12 +335,32 @@ const MessageHeader: React.FC<MessageHeaderProps> = ({ conversation, users }) =>
 			<button className="p-2 rounded-full hover:bg-gray-100">
 				<Video size={20} />
 			</button>
-			<button className="p-2 rounded-full hover:bg-gray-100">
+			<button onClick={togglePopup} className="p-2 rounded-full hover:bg-gray-100 relative">
 				<MoreVertical size={20} />
 			</button>
+			<PopupMenu
+				isOpen={isPopupOpen}
+				openDialog={openDialog}
+			/>
 		</div>
+		<AddMemberDialog
+			isOpen={activeDialog === 'addMember'}
+			onClose={closeDialog}
+			users={users}
+			conversation={conversation!}
+			/>
+		<ChangeConversationNameDialog
+			isOpen={activeDialog === 'changeName'}
+			onClose={closeDialog}
+			conversation={conversation!}
+		/>
+		<LeaveChatDialog
+			isOpen={activeDialog === 'leave'}
+			onClose={closeDialog}
+			conversation={conversation!}
+		/>
 	</div>
-);
+}
 
 // Props for MessageBubble component
 interface MessageBubbleProps {
@@ -282,8 +508,8 @@ const MessageContainer: React.FC<MessageContainerProps> = ({
 			return
 		}
 		usersInConversationApi(conversation.id).then(setUsers)
-		getMessagesApi(messages.length, conversation.id).then(msg => {
-			setMessages(messages.concat(msg))
+		getMessagesApi(0, conversation.id).then(msg => {
+			setMessages(msg)
 		})
 	}, [conversation])
 
@@ -292,7 +518,6 @@ const MessageContainer: React.FC<MessageContainerProps> = ({
 	}
 
 	return <div className="w-2/3 flex flex-col">
-		{JSON.stringify(users)}
 		<MessageHeader conversation={conversation} users={users} />
 		<MessageList messages={messages} setMessages={setMessages} conversation={conversation} />
 		<MessageInput
@@ -305,6 +530,7 @@ const MessageContainer: React.FC<MessageContainerProps> = ({
 // Main component
 const MessengerPage: React.FC = () => {
 	const [conversations, setConversations] = useState<Conversation[]>([])
+	const [selectedConversationId, setSelectedConversationId] = useState<string>("");
 
 	useEffect(() => {
 		const timer = setInterval(() => {
@@ -318,8 +544,7 @@ const MessengerPage: React.FC = () => {
 		return () => {
 			clearInterval(timer)
 		}
-	}, [])
-	const [selectedConversationId, setSelectedConversationId] = useState<string>("");
+	}, [selectedConversationId])
 
 	const selectedConversation = useMemo(() => conversations.find(x => x.id === selectedConversationId), [selectedConversationId])
 
