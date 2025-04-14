@@ -75,6 +75,7 @@ export default function PostUI({ postId }: PostProps) {
 									setPost({
 										...post,
 										isLiked: true,
+										likeCount: post.likeCount + 1,
 									})
 								})
 								return
@@ -83,17 +84,18 @@ export default function PostUI({ postId }: PostProps) {
 								setPost({
 									...post,
 									isLiked: false,
+									likeCount: post.likeCount - 1,
 								})
 							})
 						}}
 					>
 						{!post.isLiked && <ThumbsUp className="h-5 w-5" />}
 						{post.isLiked && <ThumbsUp className="h-5 w-5 text-blue-400" />}
-						<span className={cn(post.isLiked && "text-blue-400")}>Like</span>
+						<span className={cn(post.isLiked && "text-blue-400")}>{post.likeCount ?? 0} Likes</span>
 					</Button>
 					<Button onClick={() => setIsCommentOpen(true)} variant="ghost" className="flex flex-1 items-center gap-2">
 						<MessageCircle className="h-5 w-5" />
-						<span>Comments</span>
+						<span>{post.commentCount ?? 0} Comments</span>
 					</Button>
 					<CommentSection postId={postId} isOpen={isCommentOpen} setIsOpen={setIsCommentOpen}/>
 				</div>
