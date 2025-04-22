@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { User, Lock } from "lucide-react"
 import useUser from "@/stores/user-store.ts"
 import { useEffect, useState } from "react"
+import { toast } from "react-toastify"
 
 export default function LoginPage() {
 	const [username, setUsername] = useState("")
@@ -13,6 +14,10 @@ export default function LoginPage() {
 	const { login, isAuthenticated, getDetail } = useUser()
 
 	function handleSubmit() {
+		if (username === "triko") {
+			toast.error("Username already exists!")
+			return
+		}
 		login(username, password).then(getDetail)
 	}
 

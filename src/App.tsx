@@ -12,6 +12,8 @@ import SearchPage from "./pages/search"
 import ForgetPasswordPage from "@/pages/forget_password.tsx";
 import MessengerPage from "@/pages/messenger.tsx"
 import PostPage from "@/pages/post.tsx"
+import { useEffect } from "react"
+import whoamiApi from "@/apis/whoami.ts"
 
 const routes = [
 	{ path: "/login", element: <LoginPage /> },
@@ -72,6 +74,10 @@ const routes = [
 
 function App() {
 	const children = useRoutes(routes)
+
+	useEffect(() => {
+		whoamiApi()
+	}, [])
 
 	return (
 		<>

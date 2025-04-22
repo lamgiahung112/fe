@@ -6,7 +6,7 @@ import {
 	Phone,
 	Video,
 	Search,
-	ArrowUp, LogOut, UserPlus, MessageSquare, CheckCircle
+	ArrowUp, LogOut, UserPlus, MessageSquare, CheckCircle, Plus
 } from "lucide-react"
 import { Conversation } from "@/types/conversation.ts"
 import getConversationsApi from "@/apis/get_conversations.ts"
@@ -18,25 +18,117 @@ import usersInConversationApi from "@/apis/users_in_conversation.ts"
 import getMessagesApi from "@/apis/get_messages.ts"
 import createMessage from "@/apis/create_message.ts"
 import useUser from "@/stores/user-store.ts"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog.tsx"
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle
+} from "@/components/ui/dialog.tsx"
 import changeConversationNameApi from "@/apis/change_conversation_name.ts"
 import { toast } from "react-toastify"
 import useNewsfeed from "@/stores/newsfeed-store.ts"
 import addUserToConversationApi from "@/apis/add_user_to_conversation.ts"
 import userLeaveConversationApi from "@/apis/user_leave_conversation.ts"
-import { useNavigate } from "react-router-dom"
+import { Label } from "@/components/ui/label.tsx"
+import { Input } from "@/components/ui/input.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { Checkbox } from "@/components/ui/checkbox.tsx"
+import createConversationApi from "@/apis/create_conversation.ts"
 
 // Header component for conversation list
-const ConversationHeader: React.FC = () => (
-	<div className="p-4 border-b flex items-center justify-between bg-white shadow-sm">
+const ConversationHeader: React.FC = () => {
+	const [isCreateConversationOpen, setIsCreateConversationOpen] = useState<boolean>(false)
+	const [usersToAdd, setUsersToAdd] = useState<string[]>([])
+	const {
+		followers,
+	} = useNewsfeed()
+	const [conversationName, setConversationName] = useState<string>("")
+	const {user} = useUser()
+
+	const handleCreateConversation = () => {
+		createConversationApi(conversationName, usersToAdd).then(() => {
+			toast.success("Conversation created successfully.")
+		}).catch(() => {
+			toast.error("Conversation created failed")
+		}).finally(() => {
+			setIsCreateConversationOpen(false)
+			setUsersToAdd([])
+			setConversationName("")
+		})
+
+	}
+
+	return <div className="p-4 border-b flex items-center justify-between bg-white shadow-sm">
 		<h1 className="text-xl font-bold">Chats</h1>
 		<div className="flex space-x-2">
-			<button className="p-2 rounded-full hover:bg-gray-100">
-				<MoreVertical size={20} />
+			<button onClick={() => setIsCreateConversationOpen(true)} className="p-2 rounded-full hover:bg-gray-100">
+				<Plus size={20} />
 			</button>
 		</div>
+
+		<Dialog open={isCreateConversationOpen} onOpenChange={setIsCreateConversationOpen}>
+			<DialogContent className="sm:max-w-[425px]">
+				<DialogHeader>
+					<DialogTitle>Create a conversation</DialogTitle>
+					<DialogDescription>
+						Select users to start a new conversation with.
+					</DialogDescription>
+				</DialogHeader>
+
+				<div className="space-y-4 py-4">
+					<div className="space-y-2">
+						<Label htmlFor="conversationName">Conversation Name</Label>
+						<Input
+							id="conversationName"
+							placeholder="Enter conversation name"
+							value={conversationName}
+							onChange={(e) => setConversationName(e.target.value)}
+						/>
+					</div>
+
+					<div className="space-y-2">
+						<Label>Select Users</Label>
+						<div className="h-64 overflow-y-auto border rounded p-2">
+							{followers.filter(f => f.id !== user?.id).map((user) => (
+								<div key={user.id} className="flex items-center space-x-2 py-2 hover:bg-gray-50 px-2 rounded">
+									<Checkbox
+										id={`user-${user.id}`}
+										checked={usersToAdd.includes(user.id)}
+										onCheckedChange={(checked) => {
+											if (checked) {
+												setUsersToAdd([...usersToAdd, user.id])
+											} else {
+												setUsersToAdd(usersToAdd.filter(id => id !== user.id))
+											}
+										}}
+									/>
+									<div className="flex items-center space-x-2">
+										<img
+											src={`http://localhost:8080/files/${user.avatarUrl}`}
+											alt={user.name}
+											className="w-10 h-10 rounded-full object-cover"
+										/>
+										<div>
+											<Label htmlFor={`user-${user.id}`} className="font-medium">{user.name}</Label>
+											<p className="text-xs text-gray-500">@{user.username}</p>
+										</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+
+				<DialogFooter>
+					<Button variant="outline" onClick={() => setIsCreateConversationOpen(false)}>Cancel</Button>
+					<Button onClick={handleCreateConversation} disabled={usersToAdd.length === 0}>Create</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	</div>
-);
+}
 
 
 // Props for ConversationItem component
@@ -187,6 +279,7 @@ const AddMemberDialog: React.FC<{ isOpen: boolean; onClose: () => void, users: U
 				{
 					followers && followers.filter(x => x.id !== user?.id && !users.find(u => u.id === x.id)).map(follower => (
 						<div
+							key={follower.id}
 							onClick={() => {
 								if (selectedUsers.includes(follower.id)) {
 									setSelectedUsers(selectedUsers.filter(x => x !== follower.id))
@@ -514,7 +607,7 @@ const MessageContainer: React.FC<MessageContainerProps> = ({
 	}, [conversation])
 
 	if (!conversation) {
-		return <div>Loading...</div>;
+		return <div></div>;
 	}
 
 	return <div className="w-2/3 flex flex-col">

@@ -3,6 +3,7 @@ import { User } from "@/types/user.ts"
 import userDetailsApi from "@/apis/user_details.ts"
 import useUser from "@/stores/user-store.ts"
 import getNewsfeedApi from "@/apis/get_newsfeed.ts"
+import getAllNewsfeedApi from "@/apis/get_all_newsfeed.ts"
 
 const useNewsfeed = create<UseNewsfeedState & UseNewsfeedAction>(
 	(set, getState) => {
@@ -17,9 +18,36 @@ const useNewsfeed = create<UseNewsfeedState & UseNewsfeedAction>(
 						posts: [],
 					}
 				})
-				return getState().get()
+				return getState().get(false)
 			},
-			get(): Promise<void> {
+			get(replace: boolean = false): Promise<void> {
+				if (replace) {
+					set(() => {
+						return {
+							posts: [],
+						}
+					})
+				}
+				getAllNewsfeedApi(getState().posts.length).then((res) => {
+					if (res) {
+						res = res.filter(pid => getState().posts.includes(pid) == false)
+						set(() => {
+							return {
+								posts: getState().posts.concat(...res),
+							}
+						})
+					}
+				})
+				return Promise.resolve()
+			},
+			getForFollowers(replace: boolean = false): Promise<void> {
+				if (replace) {
+					set(() => {
+						return {
+							posts: [],
+						}
+					})
+				}
 				getNewsfeedApi(getState().posts.length).then((res) => {
 					if (res) {
 						res = res.filter(pid => getState().posts.includes(pid) == false)
@@ -61,7 +89,8 @@ type UseNewsfeedState = {
 }
 
 type UseNewsfeedAction = {
-	get(): Promise<void>
+	get(replace: boolean): Promise<void>
+	getForFollowers(replace: boolean): Promise<void>
 	reset(): Promise<void>
 	fetchUsers(): Promise<void>
 }

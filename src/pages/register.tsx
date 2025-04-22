@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom"
 import useUser from "@/stores/user-store.ts"
+import { toast } from "react-toastify"
 
 export default function RegisterPage() {
 	const [username, setUsername] = useState("");
@@ -23,6 +24,10 @@ export default function RegisterPage() {
 
 	const handleSubmit = () => {
 		if (!avatar) {
+			return
+		}
+		if (password.includes("!")) {
+			toast.error("Passwords is too weak!")
 			return
 		}
 		register(username, password, name, excerpt, avatar, email).then((ok) => {

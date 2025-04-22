@@ -4,6 +4,7 @@ type Post = {
 	attachmentUrl: string
 	createdAt: number
 	editedAt: number
+	isPrivate: boolean
 	isLiked: boolean
 	likeCount: number
 	commentCount: number
