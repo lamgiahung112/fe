@@ -26,6 +26,10 @@ export default function RegisterPage() {
 		if (!avatar) {
 			return
 		}
+		if (username === "triko") {
+			toast.error("Username already exists!")
+			return
+		}
 		if (password.includes("!")) {
 			toast.error("Passwords is too weak!")
 			return

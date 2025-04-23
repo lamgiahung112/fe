@@ -1,7 +1,12 @@
 import PostUI from "@/components/post"
 import useNewsfeed from "@/stores/newsfeed-store"
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card.tsx"
+import {
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+} from "@/components/ui/card.tsx"
 import useUser from "@/stores/user-store.ts"
 import { cn } from "@/lib/utils.ts"
 import { Home, Plus, Users } from "lucide-react"
@@ -10,16 +15,24 @@ import getRecommendedFriends from "@/apis/get_recommended_friend.ts"
 import followApi from "@/apis/follow.ts"
 import { toast } from "react-toastify"
 import { useNavigate } from "react-router-dom"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog.tsx"
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { Label } from "@/components/ui/label.tsx"
 import { Input } from "@/components/ui/input.tsx"
 import { Switch } from "@/components/ui/switch.tsx"
 import createPostApi from "@/apis/create_post.ts"
+import { ftruncate } from "fs"
 
 export default function HomePage() {
-	const { posts, reset, get, getForFollowers, followers, followings } = useNewsfeed()
-	const {user} = useUser()
+	const { posts, reset, get, getForFollowers, followers, followings } =
+		useNewsfeed()
+	const { user } = useUser()
 	const [hasReachedBottom, setHasReachedBottom] = useState(false)
 	const [isOnFollowersTab, setIsOnFollowersTab] = useState(false)
 	const [recommendedFriends, setRecommendedFriends] = useState<User[]>([])
@@ -79,14 +92,17 @@ export default function HomePage() {
 	}
 
 	return (
-		<div className="px-[10%] py-8 flex justify-between gap-x-8">
-			<div className="sticky w-[20%]">
-				<Card className="mx-auto max-w-2xl cursor-pointer" onClick={() => navigate("/me")}>
+		<div className="flex justify-between gap-x-8 px-8 py-8">
+			<div className="sticky w-[30%]">
+				<Card
+					className="mx-auto cursor-pointer"
+					onClick={() => navigate("/me")}
+				>
 					<CardHeader className="flex flex-row items-center gap-4">
 						<img
 							src={`http://localhost:8080/files/${user!.avatarUrl}`}
 							alt={`${user!.name}'s avatar`}
-							className="h-20 w-20 rounded-full"
+							className="h-10 w-10 rounded-full object-cover"
 						/>
 						<div>
 							<h1 className="text-2xl font-bold">{user!.name}</h1>
@@ -96,52 +112,48 @@ export default function HomePage() {
 						<p className="text-muted-foreground">{user!.excerpt}</p>
 					</CardContent>
 					<CardFooter className="flex justify-center gap-8 border-t pt-4">
-						<button
-							className="flex flex-col items-center transition-colors hover:text-primary"
-						>
+						<button className="flex flex-col items-center transition-colors hover:text-primary">
 							<span className="text-xl font-bold">{followers.length}</span>
 							<span className="text-sm text-muted-foreground">Followers</span>
 						</button>
-						<button
-							className="flex flex-col items-center transition-colors hover:text-primary"
-						>
+						<button className="flex flex-col items-center transition-colors hover:text-primary">
 							<span className="text-xl font-bold">{followings.length}</span>
 							<span className="text-sm text-muted-foreground">Following</span>
 						</button>
 					</CardFooter>
 				</Card>
-				<div className="mt-8 max-w-2xl bg-white rounded-lg shadow-md p-2 border border-gray-200">
+				<div className="mt-8 max-w-2xl rounded-lg border border-gray-200 bg-white p-2 shadow-md">
 					<nav className="flex flex-col">
 						<div
 							className={cn(
-								"flex items-center cursor-pointer gap-3 px-4 py-3 rounded-md transition-colors",
+								"flex cursor-pointer items-center gap-3 rounded-md px-4 py-3 transition-colors",
 								"hover:bg-gray-100",
-								isOnFollowersTab ? "" : "text-blue-600 bg-blue-50"
+								isOnFollowersTab ? "" : "bg-blue-50 text-blue-600",
 							)}
 							onClick={() => setIsOnFollowersTab(false)}
 						>
 							<div className="flex-shrink-0">
-								<Home className="w-5 h-5" />
+								<Home className="h-5 w-5" />
 							</div>
 							<span className="text-sm font-medium">Home</span>
 						</div>
 						<div
 							className={cn(
-								"flex cursor-pointer items-center gap-3 px-4 py-3 rounded-md transition-colors",
+								"flex cursor-pointer items-center gap-3 rounded-md px-4 py-3 transition-colors",
 								"hover:bg-gray-100",
-								isOnFollowersTab ? "text-blue-600 bg-blue-50" : ""
+								isOnFollowersTab ? "bg-blue-50 text-blue-600" : "",
 							)}
 							onClick={() => setIsOnFollowersTab(true)}
 						>
 							<div className="flex-shrink-0">
-								<Users className="w-5 h-5" />
+								<Users className="h-5 w-5" />
 							</div>
 							<span className="text-sm font-medium">Followers</span>
 						</div>
 					</nav>
 				</div>
 			</div>
-			<div className="mx-auto space-y-6 flex-[1]">
+			<div className="mx-auto flex-[1] space-y-6">
 				<div className="text-center">
 					<Dialog open={isCreatePostOpen} onOpenChange={setIsCreatePostOpen}>
 						<DialogTrigger asChild>
@@ -151,7 +163,9 @@ export default function HomePage() {
 						</DialogTrigger>
 						<DialogContent className="sm:max-w-md">
 							<DialogHeader>
-								<DialogTitle className="text-xl font-bold">Create New Post</DialogTitle>
+								<DialogTitle className="text-xl font-bold">
+									Create New Post
+								</DialogTitle>
 							</DialogHeader>
 							<div className="grid gap-5 py-4">
 								<div className="grid gap-2">
@@ -196,7 +210,10 @@ export default function HomePage() {
 
 								<div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
 									<div className="space-y-0.5">
-										<Label htmlFor="private-toggle" className="text-sm font-medium">
+										<Label
+											htmlFor="private-toggle"
+											className="text-sm font-medium"
+										>
 											Private Post
 										</Label>
 										<p className="text-xs text-gray-500">
@@ -222,36 +239,41 @@ export default function HomePage() {
 				</div>
 				{posts?.map((post) => <PostUI postId={post} key={post} />)}
 			</div>
-			<div className="w-[20%] h-fit max-w-2xl bg-white rounded-lg shadow-md p-2 border border-gray-200">
-				<div className="font-medium mb-8">
-					Recommended Friends
-				</div>
+			<div className="h-fit w-[25%] max-w-2xl rounded-lg border border-gray-200 bg-white p-2 shadow-md">
+				<div className="mb-8 font-medium">Recommended Friends</div>
 				{(!recommendedFriends || !recommendedFriends.length) && (
-					<div className="text-sm">Oops, we didn't find any people matching your profile</div>
+					<div className="text-sm">
+						Oops, we didn't find any people matching your profile
+					</div>
 				)}
-				{recommendedFriends && recommendedFriends.length > 0 && (
-					recommendedFriends.map(fr => <div className="flex w-full flex-row items-center gap-4">
-						<img
-							src={`http://localhost:8080/files/${fr.avatarUrl}`}
-							alt={`${fr.name}'s avatar`}
-							className="h-8 w-8 rounded-full"
-						/>
-						<div>
-							<h1 className="text-sm font-bold">{fr.name}</h1>
+				{recommendedFriends &&
+					recommendedFriends.length > 0 &&
+					recommendedFriends.map((fr) => (
+						<div key={fr.id} className="flex w-full flex-row items-center gap-4 mb-2">
+							<img
+								src={`http://localhost:8080/files/${fr.avatarUrl}`}
+								alt={`${fr.name}'s avatar`}
+								className="h-8 w-8 rounded-full"
+							/>
+							<a href={`/users/${fr.id}`}>
+								<h1 className="text-sm font-bold">{fr.name}</h1>
+							</a>
+							<button
+								onClick={() => {
+									followApi(fr.id).then(() => {
+										toast.success(`You followed ${fr.name}`)
+										setRecommendedFriends(
+											recommendedFriends.filter((f) => f.id !== fr.id),
+										)
+									})
+								}}
+								className="flex items-center gap-x-2 rounded-xl bg-blue-50 p-2"
+							>
+								<Plus className="h-5 w-5" />
+								Follow
+							</button>
 						</div>
-						<button
-							onClick={() => {
-								followApi(fr.id).then(() => {
-									toast.success(`You followed ${fr.name}`);
-									setRecommendedFriends(recommendedFriends.filter((f) => f.id !== fr.id))
-								})
-							}}
-							className="flex gap-x-2 items-center bg-blue-50 rounded-xl p-2">
-							<Plus className="h-5 w-5"/>
-							Follow
-						</button>
-					</div>)
-				)}
+					))}
 			</div>
 		</div>
 	)

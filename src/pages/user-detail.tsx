@@ -124,7 +124,7 @@ export default function UserDetailPage() {
 
 			{/* Posts Section */}
 			<div className="mx-auto mt-8 max-w-2xl space-y-6">
-				{posts?.map((post) => <PostUI postId={post.id} key={post.id} />)}
+				{posts?.filter(p => !p.isPrivate || isFollowing).map((post) => <PostUI postId={post.id} key={post.id} />)}
 			</div>
 		</div>
 	)
