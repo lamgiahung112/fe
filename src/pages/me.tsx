@@ -13,15 +13,16 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import createPostApi from "@/apis/create_post"
 import { toast } from "react-toastify"
-import { Post } from "@/types/post"
+import type { Post } from "@/types/post"
 import postsByUserId from "@/apis/posts_by_user"
 import { useNavigate } from "react-router-dom"
 import PostUI from "@/components/post"
 import useNewsfeed from "@/stores/newsfeed-store"
-import { User } from "@/types/user"
-import { Switch } from "@/components/ui/switch.tsx"
-import { MoreVertical } from "lucide-react"
-import updateProfileApi from "@/apis/update_profile.ts"
+import type { User } from "@/types/user"
+import { Switch } from "@/components/ui/switch"
+import { Camera, Edit, PlusCircle } from "lucide-react"
+import updateProfileApi from "@/apis/update_profile"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function MePage() {
 	const { user, getDetail } = useUser()
@@ -32,21 +33,24 @@ export default function MePage() {
 	const [posts, setPosts] = useState<Post[]>([])
 	const [followersOpen, setFollowersOpen] = useState(false)
 	const [followingsOpen, setFollowingsOpen] = useState(false)
-	const [isPrivate, setIsPrivate] = useState<boolean>(false)
+	const [isPrivate, setIsPrivate] = useState(false)
 
-	const [updateUserOpen, setUpdateUserOpen] = useState<boolean>(false)
-	const [excerpt, setExcerpt] = useState<string>("")
+	const [updateUserOpen, setUpdateUserOpen] = useState(false)
+	const [excerpt, setExcerpt] = useState("")
 	const [name, setName] = useState("")
 	const [avatar, setAvatar] = useState<File | null>(null)
 
-	const handleCreatePost = async () => {
+	const fetchPosts = () => {
+		if (!user?.id) return
+		postsByUserId(user.id)
+			.then(setPosts)
+			.catch(() => toast.error("Failed to load posts"))
+	}
+
+	const handleCreatePost = () => {
 		createPostApi(caption, file, isPrivate)
-			.then(() => {
-				toast.success("Successfully created post")
-			})
-			.catch(() => {
-				toast.error("Create post failed")
-			})
+			.then(() => toast.success("Post created"))
+			.catch(() => toast.error("Failed to post"))
 			.finally(() => {
 				setCaption("")
 				setFile(null)
@@ -55,33 +59,18 @@ export default function MePage() {
 			})
 	}
 
-	const handleUpdateProfile = async () => {
-		if (!user) {
-			return
-		}
+	const handleUpdateProfile = () => {
+		if (!user) return
 		updateProfileApi(name, excerpt, user.avatarUrl, avatar)
-			.then(() => {
-				toast.success("Successfully update profile")
-			})
-			.catch(() => {
-				toast.error("Update profile failed")
-			})
+			.then(() => toast.success("Profile updated"))
+			.catch(() => toast.error("Update failed"))
 			.finally(() => {
 				setName("")
+				setExcerpt("")
 				setAvatar(null)
 				setUpdateUserOpen(false)
-				setExcerpt("")
 				getDetail()
 			})
-	}
-
-	const fetchPosts = () => {
-		if (!user || !user.id) {
-			return
-		}
-		postsByUserId(user.id)
-			.then(setPosts)
-			.catch(() => toast.error("Failed to query user posts"))
 	}
 
 	useEffect(() => {
@@ -89,116 +78,123 @@ export default function MePage() {
 	}, [])
 
 	return (
-		<div className="container py-8">
-			<Card className="mx-auto max-w-2xl">
-				<CardHeader className="flex flex-row items-center gap-4">
-					<img
-						src={`http://localhost:8080/files/${user!.avatarUrl}`}
-						alt={`${user!.name}'s avatar`}
-						className="h-20 w-20 rounded-full"
-					/>
-					<div>
-						<h1 className="text-2xl font-bold">{user!.name}</h1>
+		<div className="container mx-auto max-w-4xl px-4 py-8">
+			<Card className="overflow-hidden border-0 bg-gradient-to-b from-background to-muted/20 shadow-md">
+				<CardHeader className="relative p-0">
+					<div className="h-32 bg-gradient-to-r from-rose-100 to-teal-100 dark:from-rose-950/30 dark:to-teal-950/30"></div>
+					<div className="absolute -bottom-12 left-8 h-24 w-24 overflow-hidden rounded-full border-4 border-background shadow-lg">
+						<img
+							src={`http://localhost:8080/files/${user!.avatarUrl}`}
+							alt="avatar"
+							className="h-full w-full object-cover"
+						/>
 					</div>
 					<Dialog open={updateUserOpen} onOpenChange={setUpdateUserOpen}>
 						<DialogTrigger asChild>
-							<button
-								className="text-muted-foreground transition-colors hover:text-foreground"
-								onClick={() => {
-									setUpdateUserOpen(true)
-								}}
+							<Button
+								size="icon"
+								variant="ghost"
+								className="absolute right-4 top-4 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+								onClick={() => setUpdateUserOpen(true)}
 							>
-								<MoreVertical size={20} />
-							</button>
+								<Edit size={18} />
+							</Button>
 						</DialogTrigger>
 						<DialogContent className="sm:max-w-md">
 							<DialogHeader>
-								<DialogTitle className="text-xl font-bold">Update your profile</DialogTitle>
+								<DialogTitle className="text-xl">Update Profile</DialogTitle>
 							</DialogHeader>
-							<div className="grid gap-5 py-4">
-								<div className="grid gap-2">
-									<Label htmlFor="excerpt" className="text-sm font-medium">
-										Excerpt
-									</Label>
-									<textarea
-										id="excerpt"
-										placeholder="Your excerpt"
-										className="min-h-24 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-										value={excerpt}
-										onChange={(e) => setExcerpt(e.target.value)}
-									/>
-								</div>
-
-								<div className="grid gap-2">
-									<Label htmlFor="name" className="text-sm font-medium">
-										Name
-									</Label>
-									<textarea
+							<div className="space-y-4 py-4">
+								<div className="space-y-1">
+									<Label htmlFor="name">Name</Label>
+									<Input
 										id="name"
-										placeholder="Your name"
-										className="min-h-24 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
 										value={name}
 										onChange={(e) => setName(e.target.value)}
+										placeholder="Your name"
 									/>
 								</div>
-
-								<div className="grid gap-2">
-									<Label htmlFor="file" className="text-sm font-medium">
-										Avatar (Optional)
+								<div className="space-y-1">
+									<Label htmlFor="excerpt">Bio</Label>
+									<textarea
+										id="excerpt"
+										value={excerpt}
+										onChange={(e) => setExcerpt(e.target.value)}
+										className="min-h-[80px] w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-900"
+										placeholder="Say something about yourself"
+									/>
+								</div>
+								<div className="space-y-1">
+									<Label htmlFor="avatar" className="mb-2 block">
+										Avatar
 									</Label>
-									<Input
-										id="file"
-										type="file"
-										accept="image/*,video/*"
-										className="cursor-pointer file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
-										onChange={(e) => {
-											if (e.target.files?.length) {
-												setAvatar(e.target.files[0])
-											}
-										}}
-									/>
-								</div>
-
-								{avatar && (
-									<div className="mt-2 overflow-hidden rounded-lg border border-gray-200">
-										<img
-											src={URL.createObjectURL(avatar)}
-											alt="Preview"
-											className="h-16 w-16 rounded-full object-cover"
-										/>
+									<div className="flex items-center gap-4">
+										{avatar && (
+											<div className="relative h-16 w-16 overflow-hidden rounded-full border">
+												<img
+													src={
+														URL.createObjectURL(avatar) || "/placeholder.svg"
+													}
+													alt="Preview"
+													className="h-full w-full object-cover"
+												/>
+											</div>
+										)}
+										<div className="flex-1">
+											<label
+												htmlFor="avatar-upload"
+												className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-4 py-2 transition-colors hover:bg-muted/50"
+											>
+												<Camera size={18} />
+												<span>Choose image</span>
+											</label>
+											<Input
+												id="avatar-upload"
+												type="file"
+												accept="image/*"
+												className="hidden"
+												onChange={(e) =>
+													e.target.files?.[0] && setAvatar(e.target.files[0])
+												}
+											/>
+										</div>
 									</div>
-								)}
-								<Button
-									className="mt-2 w-full bg-blue-600 hover:bg-blue-700"
-									onClick={handleUpdateProfile}
-								>
-									Update
+								</div>
+								<Button onClick={handleUpdateProfile} className="w-full">
+									Update Profile
 								</Button>
 							</div>
 						</DialogContent>
 					</Dialog>
-
 				</CardHeader>
-				<CardContent>
-					<p className="text-muted-foreground">{user!.excerpt}</p>
+				<CardContent className="px-8 pb-6 pt-16">
+					<div className="flex flex-col gap-1">
+						<h1 className="text-2xl font-bold text-foreground">{user!.name}</h1>
+						<p className="text-muted-foreground">
+							{user!.excerpt || "No bio yet"}
+						</p>
+					</div>
 				</CardContent>
-				<CardFooter className="flex justify-center gap-8 border-t pt-4">
-					<button
-						onClick={() => setFollowersOpen(true)}
-						className="flex flex-col items-center transition-colors hover:text-primary"
-					>
-						<span className="text-xl font-bold">{followers.length}</span>
-						<span className="text-sm text-muted-foreground">Followers</span>
-					</button>
-					<button
-						onClick={() => setFollowingsOpen(true)}
-						className="flex flex-col items-center transition-colors hover:text-primary"
-					>
-						<span className="text-xl font-bold">{followings.length}</span>
-						<span className="text-sm text-muted-foreground">Following</span>
-					</button>
+				<CardFooter className="px-0">
+					<div className="grid w-full grid-cols-2 divide-x border-t text-center dark:divide-gray-700">
+						<button
+							onClick={() => setFollowersOpen(true)}
+							className="py-4 transition-colors hover:bg-muted/50"
+						>
+							<div className="text-xl font-semibold">{followers.length}</div>
+							<div className="text-sm text-muted-foreground">Followers</div>
+						</button>
+						<button
+							onClick={() => setFollowingsOpen(true)}
+							className="py-4 transition-colors hover:bg-muted/50"
+						>
+							<div className="text-xl font-semibold">{followings.length}</div>
+							<div className="text-sm text-muted-foreground">Following</div>
+						</button>
+					</div>
 				</CardFooter>
 			</Card>
+
 			<UserListDialog
 				title="Followers"
 				users={followers}
@@ -211,91 +207,189 @@ export default function MePage() {
 				isOpen={followingsOpen}
 				setIsOpen={setFollowingsOpen}
 			/>
-			<div className="mt-8 text-center">
-				<Dialog open={open} onOpenChange={setOpen}>
-					<DialogTrigger asChild>
-						<Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-							Share your story
-						</Button>
-					</DialogTrigger>
-					<DialogContent className="sm:max-w-md">
-						<DialogHeader>
-							<DialogTitle className="text-xl font-bold">Create New Post</DialogTitle>
-						</DialogHeader>
-						<div className="grid gap-5 py-4">
-							<div className="grid gap-2">
-								<Label htmlFor="caption" className="text-sm font-medium">
-									Caption
-								</Label>
-								<textarea
-									id="caption"
-									placeholder="What's on your mind?"
-									className="min-h-24 w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-									value={caption}
-									onChange={(e) => setCaption(e.target.value)}
-								/>
-							</div>
 
-							<div className="grid gap-2">
-								<Label htmlFor="file" className="text-sm font-medium">
-									Media (Optional)
-								</Label>
-								<Input
-									id="file"
-									type="file"
-									accept="image/*,video/*"
-									className="cursor-pointer file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
-									onChange={(e) => {
-										if (e.target.files?.length) {
-											setFile(e.target.files[0])
+			<div className="mt-8">
+				<Tabs defaultValue="posts" className="w-full">
+					<TabsList className="mb-6 grid w-full grid-cols-2">
+						<TabsTrigger value="posts">My Posts</TabsTrigger>
+						<TabsTrigger value="create">Create Post</TabsTrigger>
+					</TabsList>
+					<TabsContent value="posts">
+						<div className="space-y-6">
+							{posts.length === 0 ? (
+								<div className="py-12 text-center">
+									<p className="mb-4 text-muted-foreground">
+										You haven't shared any posts yet
+									</p>
+									<Button
+										onClick={() => setOpen(true)}
+										variant="outline"
+										className="gap-2"
+									>
+										<PlusCircle size={16} />
+										Create your first post
+									</Button>
+								</div>
+							) : (
+								posts.map((post) => <PostUI key={post.id} postId={post.id} />)
+							)}
+						</div>
+					</TabsContent>
+					<TabsContent value="create">
+						<Card className="border shadow-sm">
+							<CardHeader>
+								<h3 className="text-lg font-medium">Share your story</h3>
+							</CardHeader>
+							<CardContent>
+								<div className="space-y-4">
+									<div className="space-y-2">
+										<Label htmlFor="post-caption">Caption</Label>
+										<textarea
+											id="post-caption"
+											value={caption}
+											onChange={(e) => setCaption(e.target.value)}
+											placeholder="What's on your mind?"
+											className="min-h-[120px] w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-900"
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="post-media">Media (optional)</Label>
+										<div className="flex items-center gap-4">
+											{file && (
+												<div className="relative h-20 w-20 overflow-hidden rounded-md border">
+													<img
+														src={
+															URL.createObjectURL(file) || "/placeholder.svg"
+														}
+														alt="Preview"
+														className="h-full w-full object-cover"
+													/>
+												</div>
+											)}
+											<div className="flex-1">
+												<label
+													htmlFor="post-media"
+													className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-4 py-2 transition-colors hover:bg-muted/50"
+												>
+													<Camera size={18} />
+													<span>
+														{file ? "Change media" : "Add photo or video"}
+													</span>
+												</label>
+												<Input
+													id="post-media"
+													type="file"
+													accept="image/*,video/*"
+													className="hidden"
+													onChange={(e) =>
+														e.target.files?.[0] && setFile(e.target.files[0])
+													}
+												/>
+											</div>
+										</div>
+									</div>
+									<div className="flex items-center justify-between rounded-md bg-muted/50 p-4">
+										<div>
+											<Label
+												htmlFor="private-toggle"
+												className="text-sm font-medium"
+											>
+												Private Post
+											</Label>
+											<p className="text-xs text-muted-foreground">
+												Only you will be able to see this post
+											</p>
+										</div>
+										<Switch
+											id="private-toggle"
+											checked={isPrivate}
+											onCheckedChange={setIsPrivate}
+										/>
+									</div>
+								</div>
+							</CardContent>
+							<CardFooter className="flex justify-end border-t pt-4">
+								<Button onClick={handleCreatePost} className="px-6">
+									{isPrivate ? "Create Private Post" : "Share Post"}
+								</Button>
+							</CardFooter>
+						</Card>
+					</TabsContent>
+				</Tabs>
+			</div>
+
+			<Dialog open={open} onOpenChange={setOpen}>
+				<DialogContent className="sm:max-w-md">
+					<DialogHeader>
+						<DialogTitle>Create New Post</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-4 py-4">
+						<div className="space-y-1">
+							<Label htmlFor="caption">Caption</Label>
+							<textarea
+								id="caption"
+								value={caption}
+								onChange={(e) => setCaption(e.target.value)}
+								placeholder="What's on your mind?"
+								className="min-h-[120px] w-full rounded-md border px-3 py-2 text-sm dark:bg-gray-900"
+							/>
+						</div>
+						<div className="space-y-1">
+							<Label htmlFor="file">Media (optional)</Label>
+							<div className="flex items-center gap-4">
+								{file && (
+									<div className="relative h-16 w-16 overflow-hidden rounded-md border">
+										<img
+											src={URL.createObjectURL(file) || "/placeholder.svg"}
+											alt="Preview"
+											className="h-full w-full object-cover"
+										/>
+									</div>
+								)}
+								<div className="flex-1">
+									<label
+										htmlFor="file"
+										className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-4 py-2 transition-colors hover:bg-muted/50"
+									>
+										<Camera size={18} />
+										<span>{file ? "Change media" : "Add photo or video"}</span>
+									</label>
+									<Input
+										id="file"
+										type="file"
+										accept="image/*,video/*"
+										className="hidden"
+										onChange={(e) =>
+											e.target.files?.[0] && setFile(e.target.files[0])
 										}
-									}}
-								/>
-							</div>
-
-							{file && (
-								<div className="mt-2 overflow-hidden rounded-lg border border-gray-200">
-									<img
-										src={URL.createObjectURL(file)}
-										alt="Preview"
-										className="h-48 w-full object-cover"
 									/>
 								</div>
-							)}
-
-							<div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3">
-								<div className="space-y-0.5">
-									<Label htmlFor="private-toggle" className="text-sm font-medium">
-										Private Post
-									</Label>
-									<p className="text-xs text-gray-500">
-										Only you will be able to see this post
-									</p>
-								</div>
-								<Switch
-									id="private-toggle"
-									checked={isPrivate}
-									onCheckedChange={(checked) => setIsPrivate(checked)}
-								/>
 							</div>
-
-							<Button
-								className="mt-2 w-full bg-blue-600 hover:bg-blue-700"
-								onClick={handleCreatePost}
-							>
-								{isPrivate ? "Create Private Post" : "Share Post"}
-							</Button>
 						</div>
-					</DialogContent>
-				</Dialog>
-			</div>
-
-			{/* Posts Section */}
-			<div className="mx-auto mt-8 max-w-2xl space-y-6">
-				{posts?.map((post) => (
-					<PostUI postId={post.id} key={post.id} />
-				))}
-			</div>
+						<div className="flex items-center justify-between rounded-md bg-muted/50 p-4">
+							<div>
+								<Label
+									htmlFor="dialog-private-toggle"
+									className="text-sm font-medium"
+								>
+									Private Post
+								</Label>
+								<p className="text-xs text-muted-foreground">
+									Only you will be able to see this post
+								</p>
+							</div>
+							<Switch
+								id="dialog-private-toggle"
+								checked={isPrivate}
+								onCheckedChange={setIsPrivate}
+							/>
+						</div>
+						<Button onClick={handleCreatePost} className="w-full">
+							{isPrivate ? "Create Private Post" : "Share Post"}
+						</Button>
+					</div>
+				</DialogContent>
+			</Dialog>
 		</div>
 	)
 }
@@ -315,21 +409,26 @@ function UserListDialog({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className="sm:max-w-sm">
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 				</DialogHeader>
 				<div className="max-h-[60vh] overflow-y-auto">
 					{users.length === 0 ? (
-						<p className="py-4 text-center text-muted-foreground">
-							No users to display
-						</p>
+						<div className="py-8 text-center">
+							<p className="mb-2 text-muted-foreground">No users to display</p>
+							<p className="text-xs text-muted-foreground/70">
+								{title === "Followers"
+									? "When people follow you, they'll appear here"
+									: "People you follow will appear here"}
+							</p>
+						</div>
 					) : (
-						<div className="space-y-4 py-4">
+						<div className="space-y-1 py-2">
 							{users.map((user) => (
 								<div
 									key={user.id}
-									className="flex cursor-pointer items-center gap-3 rounded-md p-2 hover:bg-accent"
+									className="flex cursor-pointer items-center gap-3 rounded-md p-3 transition-colors hover:bg-muted"
 									onClick={() => {
 										navigate(`/users/${user.id}`)
 										setIsOpen(false)
@@ -337,10 +436,12 @@ function UserListDialog({
 								>
 									<img
 										src={`http://localhost:8080/files/${user.avatarUrl}`}
-										alt={`${user.name}'s avatar`}
-										className="h-10 w-10 rounded-full object-cover"
+										alt={user.name}
+										className="h-10 w-10 rounded-full border object-cover"
 									/>
-									<span className="font-medium">{user.name}</span>
+									<span className="font-medium text-foreground">
+										{user.name}
+									</span>
 								</div>
 							))}
 						</div>

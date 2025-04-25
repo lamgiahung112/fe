@@ -8,16 +8,21 @@ const useUser = create<UserStoreState & UserStoreAction>((set) => {
 	return {
 		user: JSON.parse(localStorage.getItem("user") ?? "null"),
 		isAuthenticated: !!JSON.parse(localStorage.getItem("user") ?? "null"),
+		logout(): void {
+			localStorage.removeItem("user");
+			set(() => ({
+				user: null,
+				isAuthenticated: false,
+			}));
+		},
 		async getDetail(): Promise<void> {
 			const data = await whoamiApi()
 			if (!data) return
 			localStorage.setItem("user", JSON.stringify(data))
-			set(() => {
-				return {
-					user: data,
-					isAuthenticated: true,
-				}
-			})
+			set(() => ({
+				user: data,
+				isAuthenticated: true,
+			}));
 		},
 		login(username: string, password: string): Promise<boolean> {
 			return loginApi(username, password)
@@ -37,6 +42,7 @@ type UserStoreAction = {
 	login(username: string, password: string): Promise<boolean>
 	register(username: string, password: string, name: string, excerpt: string, avatar: File, email: string): Promise<boolean>
 	getDetail(): Promise<void>
+	logout: () => void
 }
 
 export default useUser
