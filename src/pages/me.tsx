@@ -1,3 +1,5 @@
+"use client"
+
 import useUser from "@/stores/user-store"
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { useEffect, useState } from "react"
@@ -20,7 +22,7 @@ import PostUI from "@/components/post"
 import useNewsfeed from "@/stores/newsfeed-store"
 import type { User } from "@/types/user"
 import { Switch } from "@/components/ui/switch"
-import { Camera, Edit, PlusCircle } from "lucide-react"
+import { Camera, Edit, ImageIcon, PlusCircle, X } from "lucide-react"
 import updateProfileApi from "@/apis/update_profile"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -39,6 +41,8 @@ export default function MePage() {
 	const [excerpt, setExcerpt] = useState("")
 	const [name, setName] = useState("")
 	const [avatar, setAvatar] = useState<File | null>(null)
+	const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+	const [activeTab, setActiveTab] = useState("posts")
 
 	const fetchPosts = () => {
 		if (!user?.id) return
@@ -48,53 +52,114 @@ export default function MePage() {
 	}
 
 	const handleCreatePost = () => {
+		if (!caption.trim() && !file) {
+			toast.error("Please add a caption or media to your post")
+			return
+		}
+
 		createPostApi(caption, file, isPrivate)
-			.then(() => toast.success("Post created"))
-			.catch(() => toast.error("Failed to post"))
+			.then(() => {
+				toast.success("Post created successfully")
+				fetchPosts()
+			})
+			.catch(() => toast.error("Failed to create post"))
 			.finally(() => {
 				setCaption("")
 				setFile(null)
+				setPreviewUrl(null)
+				setIsPrivate(false)
 				setOpen(false)
-				fetchPosts()
+				setActiveTab("posts")
 			})
 	}
 
 	const handleUpdateProfile = () => {
 		if (!user) return
-		updateProfileApi(name, excerpt, user.avatarUrl, avatar)
-			.then(() => toast.success("Profile updated"))
+		if (name === "") {
+			toast.error("Name is required")
+			return
+		}
+
+		// Only update fields that have been changed
+		const updatedName = name || user.name
+		const updatedExcerpt = excerpt !== "" ? excerpt : user.excerpt
+		const updatedAvatarUrl = user.avatarUrl
+
+		updateProfileApi(updatedName, updatedExcerpt, updatedAvatarUrl, avatar)
+			.then(() => {
+				toast.success("Profile updated successfully")
+				getDetail()
+			})
 			.catch(() => toast.error("Update failed"))
 			.finally(() => {
 				setName("")
 				setExcerpt("")
 				setAvatar(null)
 				setUpdateUserOpen(false)
-				getDetail()
 			})
 	}
 
+	// Pre-fill form fields with existing user data
+	useEffect(() => {
+		if (updateUserOpen && user) {
+			setName(user.name || "")
+			setExcerpt(user.excerpt || "")
+		}
+	}, [updateUserOpen, user])
+
+	// Update preview URL when file changes
+	useEffect(() => {
+		if (file) {
+			const url = URL.createObjectURL(file)
+			setPreviewUrl(url)
+			return () => URL.revokeObjectURL(url)
+		} else {
+			setPreviewUrl(null)
+		}
+	}, [file])
+
 	useEffect(() => {
 		fetchPosts()
-	}, [])
+	}, [user?.id])
+
+	if (!user) {
+		return (
+			<div className="flex h-[70vh] items-center justify-center">
+				<div className="text-center">
+					<div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
+					<p className="text-muted-foreground">Loading profile...</p>
+				</div>
+			</div>
+		)
+	}
 
 	return (
 		<div className="container mx-auto max-w-4xl px-4 py-8">
-			<Card className="overflow-hidden border-0 bg-gradient-to-b from-background to-muted/20 shadow-md">
+			<Card className="overflow-hidden border-0 bg-gradient-to-b from-background to-muted/20 shadow-md transition-all duration-300 hover:shadow-lg">
 				<CardHeader className="relative p-0">
-					<div className="h-32 bg-gradient-to-r from-rose-100 to-teal-100 dark:from-rose-950/30 dark:to-teal-950/30"></div>
-					<div className="absolute -bottom-12 left-8 h-24 w-24 overflow-hidden rounded-full border-4 border-background shadow-lg">
+					{/* Profile Cover */}
+					<div className="h-48 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 transition-colors duration-300 dark:from-blue-950/40 dark:via-purple-950/40 dark:to-pink-950/40"></div>
+
+					{/* Profile Avatar */}
+					<div className="absolute -bottom-16 left-8 h-32 w-32 overflow-hidden rounded-full border-4 border-background shadow-lg transition-transform duration-300 hover:scale-105">
 						<img
-							src={`http://localhost:8080/files/${user!.avatarUrl}`}
+							src={`http://localhost:8080/files/${user.avatarUrl}`}
 							alt="avatar"
 							className="h-full w-full object-cover"
+							onError={(e) => {
+								;(e.target as HTMLImageElement).src =
+									"/placeholder.svg?height=128&width=128"
+							}}
 						/>
 					</div>
+
+					{/* Edit Profile Dialog */}
 					<Dialog open={updateUserOpen} onOpenChange={setUpdateUserOpen}>
 						<DialogTrigger asChild>
 							<Button
 								size="icon"
-								variant="ghost"
-								className="absolute right-4 top-4 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+								variant="outline"
+								className="absolute right-4 top-4 bg-background/80 backdrop-blur-sm transition-all duration-200 hover:bg-background/90"
 								onClick={() => setUpdateUserOpen(true)}
 							>
 								<Edit size={18} />
@@ -106,13 +171,21 @@ export default function MePage() {
 							</DialogHeader>
 							<div className="space-y-4 py-4">
 								<div className="space-y-1">
-									<Label htmlFor="name">Name</Label>
+									<Label htmlFor="name" className="flex items-center gap-1">
+										Name <span className="text-red-500">*</span>
+									</Label>
 									<Input
 										id="name"
 										value={name}
 										onChange={(e) => setName(e.target.value)}
 										placeholder="Your name"
+										required
 									/>
+									{name === "" && (
+										<p className="mt-1 text-xs text-red-500">
+											Name is required
+										</p>
+									)}
 								</div>
 								<div className="space-y-1">
 									<Label htmlFor="excerpt">Bio</Label>
@@ -129,7 +202,7 @@ export default function MePage() {
 										Avatar
 									</Label>
 									<div className="flex items-center gap-4">
-										{avatar && (
+										{avatar ? (
 											<div className="relative h-16 w-16 overflow-hidden rounded-full border">
 												<img
 													src={
@@ -139,14 +212,26 @@ export default function MePage() {
 													className="h-full w-full object-cover"
 												/>
 											</div>
-										)}
+										) : user?.avatarUrl ? (
+											<div className="relative h-16 w-16 overflow-hidden rounded-full border">
+												<img
+													src={`http://localhost:8080/files/${user.avatarUrl}`}
+													alt="Current avatar"
+													className="h-full w-full object-cover"
+													onError={(e) => {
+														;(e.target as HTMLImageElement).src =
+															"/placeholder.svg?height=64&width=64"
+													}}
+												/>
+											</div>
+										) : null}
 										<div className="flex-1">
 											<label
 												htmlFor="avatar-upload"
 												className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-4 py-2 transition-colors hover:bg-muted/50"
 											>
 												<Camera size={18} />
-												<span>Choose image</span>
+												<span>{avatar ? "Change image" : "Choose image"}</span>
 											</label>
 											<Input
 												id="avatar-upload"
@@ -160,36 +245,49 @@ export default function MePage() {
 										</div>
 									</div>
 								</div>
-								<Button onClick={handleUpdateProfile} className="w-full">
+								<Button
+									onClick={handleUpdateProfile}
+									className="w-full bg-gradient-to-r from-blue-600 to-blue-500 transition-all duration-300 hover:from-blue-500 hover:to-blue-600"
+									disabled={name === ""}
+								>
 									Update Profile
 								</Button>
 							</div>
 						</DialogContent>
 					</Dialog>
 				</CardHeader>
-				<CardContent className="px-8 pb-6 pt-16">
+				<CardContent className="px-8 pb-6 pt-20">
 					<div className="flex flex-col gap-1">
-						<h1 className="text-2xl font-bold text-foreground">{user!.name}</h1>
+						<h1 className="text-2xl font-bold text-foreground">{user.name}</h1>
 						<p className="text-muted-foreground">
-							{user!.excerpt || "No bio yet"}
+							{user.excerpt || "No bio yet"}
 						</p>
 					</div>
 				</CardContent>
 				<CardFooter className="px-0">
+					{/* Profile Stats */}
 					<div className="grid w-full grid-cols-2 divide-x border-t text-center dark:divide-gray-700">
 						<button
 							onClick={() => setFollowersOpen(true)}
-							className="py-4 transition-colors hover:bg-muted/50"
+							className="group flex flex-col items-center py-4 transition-colors hover:bg-blue-50/50 dark:hover:bg-blue-900/20"
 						>
-							<div className="text-xl font-semibold">{followers.length}</div>
-							<div className="text-sm text-muted-foreground">Followers</div>
+							<div className="text-xl font-semibold transition-transform duration-200 group-hover:scale-110">
+								{followers.length}
+							</div>
+							<div className="text-sm text-muted-foreground transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">
+								Followers
+							</div>
 						</button>
 						<button
 							onClick={() => setFollowingsOpen(true)}
-							className="py-4 transition-colors hover:bg-muted/50"
+							className="group flex flex-col items-center py-4 transition-colors hover:bg-blue-50/50 dark:hover:bg-blue-900/20"
 						>
-							<div className="text-xl font-semibold">{followings.length}</div>
-							<div className="text-sm text-muted-foreground">Following</div>
+							<div className="text-xl font-semibold transition-transform duration-200 group-hover:scale-110">
+								{followings.length}
+							</div>
+							<div className="text-sm text-muted-foreground transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">
+								Following
+							</div>
 						</button>
 					</div>
 				</CardFooter>
@@ -209,38 +307,59 @@ export default function MePage() {
 			/>
 
 			<div className="mt-8">
-				<Tabs defaultValue="posts" className="w-full">
-					<TabsList className="mb-6 grid w-full grid-cols-2">
-						<TabsTrigger value="posts">My Posts</TabsTrigger>
-						<TabsTrigger value="create">Create Post</TabsTrigger>
+				<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+					<TabsList className="mb-6 grid w-full grid-cols-2 rounded-lg bg-muted/50 p-1">
+						<TabsTrigger
+							value="posts"
+							className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+						>
+							My Posts
+						</TabsTrigger>
+						<TabsTrigger
+							value="create"
+							className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+						>
+							Create Post
+						</TabsTrigger>
 					</TabsList>
-					<TabsContent value="posts">
-						<div className="space-y-6">
-							{posts.length === 0 ? (
-								<div className="py-12 text-center">
-									<p className="mb-4 text-muted-foreground">
-										You haven't shared any posts yet
-									</p>
-									<Button
-										onClick={() => setOpen(true)}
-										variant="outline"
-										className="gap-2"
-									>
-										<PlusCircle size={16} />
-										Create your first post
-									</Button>
+
+					<TabsContent value="posts" className="space-y-6">
+						{posts.length === 0 ? (
+							<div className="flex flex-col items-center justify-center py-16 text-center">
+								<div className="mb-4 rounded-full bg-blue-100 p-4 dark:bg-blue-900/30">
+									<PlusCircle
+										size={32}
+										className="text-blue-600 dark:text-blue-400"
+									/>
 								</div>
-							) : (
-								posts.map((post) => <PostUI key={post.id} postId={post.id} />)
-							)}
-						</div>
+								<h3 className="mb-2 text-lg font-medium">No posts yet</h3>
+								<p className="mb-6 max-w-md text-muted-foreground">
+									Share your thoughts, photos, and experiences with your
+									followers
+								</p>
+								<Button
+									onClick={() => setActiveTab("create")}
+									className="gap-2 bg-gradient-to-r from-blue-600 to-blue-500 transition-all duration-300 hover:from-blue-500 hover:to-blue-600"
+								>
+									<PlusCircle size={16} />
+									Create your first post
+								</Button>
+							</div>
+						) : (
+							<div className="space-y-6">
+								{posts.map((post) => (
+									<PostUI key={post.id} postId={post.id} />
+								))}
+							</div>
+						)}
 					</TabsContent>
+
 					<TabsContent value="create">
-						<Card className="border shadow-sm">
-							<CardHeader>
+						<Card className="overflow-hidden border shadow-sm">
+							<CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40">
 								<h3 className="text-lg font-medium">Share your story</h3>
 							</CardHeader>
-							<CardContent>
+							<CardContent className="p-6">
 								<div className="space-y-4">
 									<div className="space-y-2">
 										<Label htmlFor="post-caption">Caption</Label>
@@ -255,15 +374,30 @@ export default function MePage() {
 									<div className="space-y-2">
 										<Label htmlFor="post-media">Media (optional)</Label>
 										<div className="flex items-center gap-4">
-											{file && (
-												<div className="relative h-20 w-20 overflow-hidden rounded-md border">
-													<img
-														src={
-															URL.createObjectURL(file) || "/placeholder.svg"
-														}
-														alt="Preview"
-														className="h-full w-full object-cover"
-													/>
+											{previewUrl && (
+												<div className="relative h-24 w-24 overflow-hidden rounded-md border">
+													{file?.type.startsWith("image/") ? (
+														<img
+															src={previewUrl || "/placeholder.svg"}
+															alt="Preview"
+															className="h-full w-full object-cover"
+														/>
+													) : file?.type.startsWith("video/") ? (
+														<video
+															src={previewUrl}
+															className="h-full w-full object-cover"
+															controls
+														/>
+													) : null}
+													<button
+														onClick={() => {
+															setFile(null)
+															setPreviewUrl(null)
+														}}
+														className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+													>
+														<X className="h-3 w-3" />
+													</button>
 												</div>
 											)}
 											<div className="flex-1">
@@ -271,7 +405,7 @@ export default function MePage() {
 													htmlFor="post-media"
 													className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-4 py-2 transition-colors hover:bg-muted/50"
 												>
-													<Camera size={18} />
+													<ImageIcon size={18} />
 													<span>
 														{file ? "Change media" : "Add photo or video"}
 													</span>
@@ -308,8 +442,12 @@ export default function MePage() {
 									</div>
 								</div>
 							</CardContent>
-							<CardFooter className="flex justify-end border-t pt-4">
-								<Button onClick={handleCreatePost} className="px-6">
+							<CardFooter className="flex justify-end border-t bg-gradient-to-r from-blue-50/50 to-indigo-50/50 pt-4 dark:from-blue-950/20 dark:to-indigo-950/20">
+								<Button
+									onClick={handleCreatePost}
+									className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 transition-all duration-300 hover:from-blue-500 hover:to-blue-600"
+									disabled={!caption.trim() && !file}
+								>
 									{isPrivate ? "Create Private Post" : "Share Post"}
 								</Button>
 							</CardFooter>
@@ -337,13 +475,29 @@ export default function MePage() {
 						<div className="space-y-1">
 							<Label htmlFor="file">Media (optional)</Label>
 							<div className="flex items-center gap-4">
-								{file && (
+								{previewUrl && (
 									<div className="relative h-16 w-16 overflow-hidden rounded-md border">
-										<img
-											src={URL.createObjectURL(file) || "/placeholder.svg"}
-											alt="Preview"
-											className="h-full w-full object-cover"
-										/>
+										{file?.type.startsWith("image/") ? (
+											<img
+												src={previewUrl || "/placeholder.svg"}
+												alt="Preview"
+												className="h-full w-full object-cover"
+											/>
+										) : file?.type.startsWith("video/") ? (
+											<video
+												src={previewUrl}
+												className="h-full w-full object-cover"
+											/>
+										) : null}
+										<button
+											onClick={() => {
+												setFile(null)
+												setPreviewUrl(null)
+											}}
+											className="absolute right-1 top-1 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+										>
+											<X className="h-3 w-3" />
+										</button>
 									</div>
 								)}
 								<div className="flex-1">
@@ -384,7 +538,11 @@ export default function MePage() {
 								onCheckedChange={setIsPrivate}
 							/>
 						</div>
-						<Button onClick={handleCreatePost} className="w-full">
+						<Button
+							onClick={handleCreatePost}
+							className="w-full bg-gradient-to-r from-blue-600 to-blue-500 transition-all duration-300 hover:from-blue-500 hover:to-blue-600"
+							disabled={!caption.trim() && !file}
+						>
 							{isPrivate ? "Create Private Post" : "Share Post"}
 						</Button>
 					</div>
@@ -428,7 +586,7 @@ function UserListDialog({
 							{users.map((user) => (
 								<div
 									key={user.id}
-									className="flex cursor-pointer items-center gap-3 rounded-md p-3 transition-colors hover:bg-muted"
+									className="flex cursor-pointer items-center gap-3 rounded-md p-3 transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20"
 									onClick={() => {
 										navigate(`/users/${user.id}`)
 										setIsOpen(false)
@@ -438,6 +596,10 @@ function UserListDialog({
 										src={`http://localhost:8080/files/${user.avatarUrl}`}
 										alt={user.name}
 										className="h-10 w-10 rounded-full border object-cover"
+										onError={(e) => {
+											;(e.target as HTMLImageElement).src =
+												"/placeholder.svg?height=40&width=40"
+										}}
 									/>
 									<span className="font-medium text-foreground">
 										{user.name}

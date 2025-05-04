@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import {
 	ArrowUp,
@@ -353,14 +351,14 @@ export default function HomePage() {
 
 	return (
 		<>
-			<div className="grid grid-cols-12 gap-6 px-8 py-8">
+			<div className="grid min-h-screen grid-cols-12 gap-6 bg-gradient-to-b from-blue-50/50 to-white px-8 py-8 transition-colors duration-300 dark:from-gray-900 dark:to-gray-950">
 				{/* LEFT: PROFILE + MENU */}
 				<div className="sticky top-20 col-span-3 space-y-8 self-start">
 					{/* Profile */}
 
 					<Card
 						onClick={() => navigate("/me")}
-						className="cursor-pointer shadow-md"
+						className="cursor-pointer border border-blue-100 bg-white shadow-md transition-all duration-300 hover:shadow-lg dark:border-blue-800 dark:bg-gray-800"
 					>
 						<CardHeader className="flex flex-row items-center gap-4">
 							<img
@@ -392,14 +390,14 @@ export default function HomePage() {
 					</Card>
 
 					{/* Sidebar Menu + Groups */}
-					<div className="rounded-lg border border-gray-200 bg-white p-2 shadow-md dark:border-gray-700 dark:bg-gray-900">
+					<div className="rounded-lg border border-blue-100 bg-white p-2 shadow-md backdrop-blur-sm transition-all duration-300 dark:border-blue-900/30 dark:bg-gray-800/90">
 						<nav className="flex flex-col">
 							<div
 								className={cn(
 									"flex h-12 cursor-pointer items-center gap-3 rounded-md px-4 transition-colors",
 									!isOnFollowersTab && !isOnGroupsTab
 										? "bg-blue-50 text-blue-600 dark:bg-blue-600 dark:text-white"
-										: "hover:bg-gray-100 dark:hover:bg-gray-800",
+										: "hover:bg-blue-50 dark:hover:bg-blue-900/30",
 								)}
 								onClick={() => {
 									setIsOnFollowersTab(false)
@@ -416,7 +414,7 @@ export default function HomePage() {
 									"flex h-12 cursor-pointer items-center gap-3 rounded-md px-4 transition-colors",
 									isOnFollowersTab
 										? "bg-blue-50 text-blue-600 dark:bg-blue-600 dark:text-white"
-										: "hover:bg-gray-100 dark:hover:bg-gray-800",
+										: "hover:bg-blue-50 dark:hover:bg-blue-900/30",
 								)}
 								onClick={() => {
 									setIsOnFollowersTab(true)
@@ -434,7 +432,7 @@ export default function HomePage() {
 									"flex h-12 cursor-pointer items-center gap-3 rounded-md px-4 transition-colors",
 									isOnGroupsTab
 										? "bg-blue-50 text-blue-600 dark:bg-blue-600 dark:text-white"
-										: "hover:bg-gray-100 dark:hover:bg-gray-800",
+										: "hover:bg-blue-50 dark:hover:bg-blue-900/30",
 								)}
 								onClick={() => {
 									setIsOnGroupsTab(true)
@@ -491,8 +489,8 @@ export default function HomePage() {
 					) : null}
 
 					{/* Create Post Card */}
-					<Card className="overflow-hidden shadow-md">
-						<CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 dark:from-blue-950 dark:to-indigo-950">
+					<Card className="overflow-hidden border border-blue-100 shadow-md transition-all duration-300 hover:shadow-lg dark:border-blue-900/30">
+						<CardHeader className="bg-gradient-to-r from-blue-100 to-indigo-100 p-4 dark:from-blue-900/40 dark:to-indigo-900/40">
 							<div className="flex items-center gap-3">
 								<Avatar className="h-10 w-10 border-2 border-white shadow-sm">
 									<AvatarImage
@@ -516,7 +514,7 @@ export default function HomePage() {
 												: "What's on your mind today?"}
 										</button>
 									</DialogTrigger>
-									<DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-0 sm:max-w-xl">
+									<DialogContent className="flex max-h-[90vh] flex-col overflow-hidden border bg-white p-0 dark:border-blue-900/30 dark:bg-gray-900 sm:max-w-xl">
 										<DialogHeader className="border-b px-6 pt-6 dark:border-gray-700">
 											<DialogTitle className="text-center text-xl font-bold">
 												{selectedGroup
@@ -835,7 +833,7 @@ export default function HomePage() {
 				</div>
 				{/* RIGHT: Recommended Friends */}
 				<div className="col-span-3">
-					<div className="sticky top-24 max-h-[80vh] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-900">
+					<div className="sticky top-24 max-h-[80vh] overflow-hidden rounded-xl border border-blue-100 bg-white shadow-md transition-all duration-300 dark:border-blue-900/30 dark:bg-gray-800">
 						<div className="border-b border-gray-200 px-4 py-3 dark:border-gray-700">
 							<h2 className="text-base font-semibold text-gray-800 dark:text-white">
 								Recommended Friends
@@ -871,7 +869,7 @@ export default function HomePage() {
 										</div>
 										<button
 											onClick={() => handleFollow(fr.id, fr.name)}
-											className="flex items-center gap-1 rounded-md bg-blue-100 px-3 py-1 text-sm text-blue-700 hover:bg-blue-200 dark:bg-blue-800 dark:text-white dark:hover:bg-blue-700"
+											className="flex items-center gap-1 rounded-md bg-blue-100 px-3 py-1 text-sm text-blue-700 transition-colors duration-200 hover:bg-blue-200 dark:bg-blue-800/60 dark:text-blue-100 dark:hover:bg-blue-700/80"
 										>
 											<Plus className="h-4 w-4" />
 											Follow
@@ -890,7 +888,7 @@ export default function HomePage() {
 			{/* Fixed Chat Button */}
 			<button
 				onClick={() => setShowChat(!showChat)}
-				className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+				className="fixed bottom-6 right-6 z-50 flex h-14 w-14 transform items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-500 hover:to-blue-600 hover:shadow-blue-300/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95 dark:hover:shadow-blue-900/30"
 				aria-label="Chat"
 			>
 				<span className="text-xl">{showChat ? "✕" : "💬"}</span>
@@ -898,7 +896,7 @@ export default function HomePage() {
 
 			{/* Mini Chat Popup */}
 			{showChat && (
-				<div className="fixed bottom-24 right-6 z-50 w-[320px] rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900">
+				<div className="fixed bottom-24 right-6 z-50 w-[320px] rounded-lg border border-blue-100 bg-white shadow-lg transition-all duration-300 dark:border-blue-900/30 dark:bg-gray-900">
 					<div className="flex items-center justify-between border-b border-gray-200 p-3 dark:border-gray-700">
 						<span className="text-sm font-semibold">Mini Chat</span>
 						<button
@@ -984,8 +982,8 @@ export default function HomePage() {
 
 			{/* Groups Popup */}
 			{showGroups && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-					<div className="max-h-[80vh] w-[90%] max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900">
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-300">
+					<div className="max-h-[80vh] w-[90%] max-w-2xl overflow-y-auto rounded-lg border border-blue-100 bg-white p-6 shadow-xl transition-all duration-300 dark:border-blue-900/30 dark:bg-gray-900">
 						<div className="mb-6 flex items-center justify-between">
 							<h2 className="text-xl font-bold">Your Groups</h2>
 							<div className="flex gap-2">
@@ -1010,7 +1008,7 @@ export default function HomePage() {
 									<div
 										key={group.id}
 										onClick={() => handleSelectGroup(group)}
-										className="cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+										className="cursor-pointer rounded-lg border border-blue-100 bg-white p-4 shadow-sm transition-all duration-300 hover:bg-blue-50/50 hover:shadow-md dark:border-blue-900/30 dark:bg-gray-800 dark:hover:bg-gray-700/70"
 									>
 										<div className="flex items-start gap-4">
 											<div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg">
@@ -1160,13 +1158,14 @@ export default function HomePage() {
 								</div>
 							</div>
 						</div>
-
+						{/*
 						<Button
 							className="mt-2 w-full bg-blue-600 hover:bg-blue-700"
 							onClick={handleCreateGroup}
 						>
 							Create Group
 						</Button>
+						*/}
 					</div>
 				</DialogContent>
 			</Dialog>

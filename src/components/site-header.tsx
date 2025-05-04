@@ -1,3 +1,5 @@
+"use client"
+
 import { siteConfig } from "@/config/site.ts"
 import { cn } from "@/lib/utils"
 import useUser from "@/stores/user-store"
@@ -11,11 +13,10 @@ import {
 	Sun,
 	Search,
 	User,
-	Settings,
 	Lock,
 } from "lucide-react"
 import getNotificationApi from "@/apis/get_notification.ts"
-import { Notification } from "@/types/notification.ts"
+import type { Notification } from "@/types/notification.ts"
 import { format } from "date-fns"
 import readAllNotiApi from "@/apis/read_all_noti.ts"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -92,10 +93,13 @@ export function SiteHeader() {
 	}
 
 	return (
-		<header className="sticky top-0 z-40 w-full border-b bg-gradient-to-r from-blue-200 via-blue-50 to-white transition-colors duration-200 dark:from-gray-800 dark:via-gray-950 dark:to-black">
+		<header className="sticky top-0 z-40 w-full border-b border-blue-100 bg-gradient-to-r from-blue-100 via-blue-50 to-white backdrop-blur-sm transition-colors duration-300 dark:border-blue-900/30 dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-950">
 			<div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
-				<Link to="/" className="flex items-center gap-2 text-lg font-medium">
-					<div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white">
+				<Link
+					to="/"
+					className="flex items-center gap-2 text-lg font-medium transition-transform duration-200 hover:scale-105"
+				>
+					<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 24 24"
@@ -113,19 +117,19 @@ export function SiteHeader() {
 
 				{isAuthenticated && user && (
 					<div className="flex flex-grow items-center justify-center space-x-4">
-						<div className="relative w-[50%]">
+						<div className="relative w-[50%] transition-all duration-300 hover:w-[55%]">
 							<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
 							<input
 								type="text"
 								placeholder="Search..."
 								value={searchKeyword}
 								onChange={(e) => setSearchKeyword(e.target.value)}
-								className="w-full rounded-full border border-gray-300 bg-white px-10 py-2 text-sm text-black placeholder-gray-500 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+								className="w-full rounded-full border border-gray-300 bg-white/90 px-10 py-2 text-sm text-black placeholder-gray-500 transition-all duration-200 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:border-gray-600 dark:bg-gray-800/90 dark:text-white dark:placeholder-gray-400 dark:focus:bg-gray-800 dark:focus:ring-blue-600/50"
 							/>
 						</div>
 						<button
 							onClick={() => navigate("/search?keyword=" + searchKeyword)}
-							className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700"
+							className="rounded-md bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:from-blue-500 hover:to-blue-600 hover:shadow-md dark:from-blue-600 dark:to-blue-700 dark:hover:from-blue-500 dark:hover:to-blue-600"
 						>
 							Find
 						</button>
@@ -137,13 +141,13 @@ export function SiteHeader() {
 						{/* Dark mode toggle */}
 						<button
 							onClick={() => setDarkMode(!darkMode)}
-							className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+							className="rounded-full p-2 text-gray-600 transition-colors duration-200 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-blue-900/30"
 							title="Toggle Dark Mode"
 						>
 							{darkMode ? (
-								<Sun className="h-5 w-5 text-yellow-500" />
+								<Sun className="h-5 w-5 text-yellow-500 transition-transform duration-300 hover:rotate-12" />
 							) : (
-								<Moon className="h-5 w-5" />
+								<Moon className="h-5 w-5 transition-transform duration-300 hover:rotate-12" />
 							)}
 						</button>
 
@@ -151,7 +155,7 @@ export function SiteHeader() {
 						<div className="relative" ref={notificationRef}>
 							<button
 								onClick={handleBellClick}
-								className="relative flex items-center rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+								className="relative flex items-center rounded-full p-2 text-gray-600 transition-colors duration-200 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-blue-900/30"
 								aria-label="Notifications"
 							>
 								<Bell className="h-5 w-5" />
@@ -162,7 +166,7 @@ export function SiteHeader() {
 								)}
 							</button>
 							{showNotifications && (
-								<div className="absolute right-0 mt-2 w-80 rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-900 dark:ring-gray-700">
+								<div className="absolute right-0 mt-2 w-80 origin-top-right transform rounded-xl border border-blue-100 bg-white shadow-lg ring-1 ring-black/5 transition-all duration-300 focus:outline-none dark:border-blue-900/30 dark:bg-gray-900 dark:ring-blue-900/30">
 									<div className="border-b p-3 dark:border-gray-700">
 										<h3 className="text-sm font-medium text-gray-800 dark:text-white">
 											Notifications
@@ -215,7 +219,7 @@ export function SiteHeader() {
 						{/* Messenger shortcut */}
 						<button
 							onClick={() => navigate("/messenger")}
-							className="rounded-full p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+							className="rounded-full p-2 text-gray-600 transition-colors duration-200 hover:bg-blue-50 dark:text-gray-300 dark:hover:bg-blue-900/30"
 						>
 							<MessageCircle className="h-5 w-5" />
 						</button>
@@ -223,10 +227,10 @@ export function SiteHeader() {
 						{/* User menu */}
 						<div className="relative" ref={userMenuRef}>
 							<div
-								className="flex cursor-pointer items-center gap-2 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+								className="flex cursor-pointer items-center gap-2 rounded-full p-1 transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/30"
 								onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
 							>
-								<Avatar className="h-8 w-8 border border-gray-200 dark:border-gray-700">
+								<Avatar className="h-8 w-8 border border-blue-100 transition-all duration-300 hover:border-blue-300 dark:border-blue-900/30 dark:hover:border-blue-700">
 									<AvatarImage
 										src={`http://localhost:8080/files/${user.avatarUrl}`}
 										alt={user.name}
@@ -240,7 +244,7 @@ export function SiteHeader() {
 							</div>
 
 							{isUserMenuOpen && (
-								<div className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl border border-gray-200 bg-white shadow-lg transition-all dark:border-gray-700 dark:bg-gray-900">
+								<div className="absolute right-0 mt-2 w-64 origin-top-right rounded-xl border border-blue-100 bg-white shadow-lg transition-all duration-300 dark:border-blue-900/30 dark:bg-gray-900">
 									<div className="p-4">
 										<div className="flex items-center gap-3">
 											<Avatar className="h-12 w-12 border-2 border-blue-100 dark:border-blue-900">
@@ -267,7 +271,7 @@ export function SiteHeader() {
 
 									<div className="border-t border-gray-200 dark:border-gray-700">
 										<button
-											className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+											className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/30"
 											onClick={() => {
 												navigate("/me")
 												setIsUserMenuOpen(false)
@@ -290,7 +294,7 @@ export function SiteHeader() {
 										*/}
 
 										<button
-											className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+											className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition-colors duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/30"
 											onClick={() => {
 												navigate("/forget_password")
 												setIsUserMenuOpen(false)
@@ -303,7 +307,7 @@ export function SiteHeader() {
 
 									<div className="border-t border-gray-200 dark:border-gray-700">
 										<button
-											className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+											className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-red-600 transition-colors duration-200 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
 											onClick={() => {
 												handleLogout()
 												setIsUserMenuOpen(false)
