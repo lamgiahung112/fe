@@ -1,3 +1,5 @@
+"use client"
+
 import React from "react"
 
 import { useEffect, useState } from "react"
@@ -35,6 +37,29 @@ export default function RegisterPage() {
 	const [passwordFeedback, setPasswordFeedback] = useState("")
 	const { register, isAuthenticated } = useUser()
 	const navigate = useNavigate()
+
+	// Add a new state for username validation
+	const [usernameError, setUsernameError] = useState<string | null>(null)
+
+	// Add a function to validate username format
+	const validateUsername = (value: string) => {
+		// Check for spaces
+		if (/\s/.test(value)) {
+			return "Username không được chứa khoảng trắng"
+		}
+
+		// Check for special characters (allow only letters, numbers, underscore)
+		if (!/^[a-zA-Z0-9_]*$/.test(value)) {
+			return "Username không được chứa ký tự đặc biệt"
+		}
+
+		// Check if starts with a number
+		if (/^[0-9]/.test(value)) {
+			return "Username không được bắt đầu bằng số"
+		}
+
+		return null
+	}
 
 	// Password strength evaluation
 	useEffect(() => {
@@ -98,6 +123,13 @@ export default function RegisterPage() {
 				toast.error("Username is required")
 				return false
 			}
+
+			const usernameValidationError = validateUsername(username)
+			if (usernameValidationError) {
+				toast.error(usernameValidationError)
+				return false
+			}
+
 			if (!name.trim()) {
 				toast.error("Full name is required")
 				return false
@@ -113,6 +145,7 @@ export default function RegisterPage() {
 			return true
 		}
 
+		// Rest of the function remains unchanged
 		if (currentStep === 2) {
 			if (!password.trim()) {
 				toast.error("Password is required")
@@ -238,11 +271,29 @@ export default function RegisterPage() {
 										type="text"
 										placeholder="Choose a username"
 										value={username}
-										onChange={(e) => setUsername(e.target.value)}
-										className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-3 pl-10 pr-3 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+										onChange={(e) => {
+											const value = e.target.value
+											setUsername(value)
+											setUsernameError(validateUsername(value))
+										}}
+										className={`block w-full rounded-lg border ${
+											usernameError
+												? "border-red-300 focus:border-red-500 focus:ring-red-500"
+												: "border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+										} bg-gray-50 py-3 pl-10 pr-3 text-gray-900`}
 										required
 									/>
 								</div>
+								{usernameError && (
+									<motion.p
+										className="mt-1 text-sm text-red-600"
+										initial={{ opacity: 0, y: -10 }}
+										animate={{ opacity: 1, y: 0 }}
+										transition={{ duration: 0.2 }}
+									>
+										{usernameError}
+									</motion.p>
+								)}
 							</div>
 
 							<div className="group relative">
