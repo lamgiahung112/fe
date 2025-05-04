@@ -45,17 +45,17 @@ export default function RegisterPage() {
 	const validateUsername = (value: string) => {
 		// Check for spaces
 		if (/\s/.test(value)) {
-			return "Username không được chứa khoảng trắng"
+			return "Username must not contain whitespace"
 		}
 
 		// Check for special characters (allow only letters, numbers, underscore)
 		if (!/^[a-zA-Z0-9_]*$/.test(value)) {
-			return "Username không được chứa ký tự đặc biệt"
+			return "Username must not contain special characters"
 		}
 
 		// Check if starts with a number
 		if (/^[0-9]/.test(value)) {
-			return "Username không được bắt đầu bằng số"
+			return "Username must not start with a number"
 		}
 
 		return null
