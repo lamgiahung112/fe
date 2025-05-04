@@ -1233,7 +1233,7 @@ const MessengerPage: React.FC = () => {
 	}, [selectedConversationId])
 
 	const selectedConversation = useMemo(
-		() => conversations.find((x) => x.id === selectedConversationId),
+		() => conversations?.find((x) => x.id === selectedConversationId),
 		[conversations, selectedConversationId],
 	)
 

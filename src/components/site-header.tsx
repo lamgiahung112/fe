@@ -30,7 +30,7 @@ export function SiteHeader() {
 					setNotifications(data)
 					setUnreadCount(data.filter((noti) => !noti.isRead).length)
 				})
-				.catch((err) => console.error("Failed to fetch notifications:", err))
+				.catch((err) => setNotifications([]))
 		}
 
 		fetchNotifications()
