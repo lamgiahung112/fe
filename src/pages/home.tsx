@@ -154,10 +154,19 @@ export default function HomePage() {
 	useEffect(() => {
 		// Fetch recommended friends when component mounts
 		getRecommendedFriends()
-			.then(setRecommendedFriends)
+			.then((friends) => {
+				// Loại bỏ trùng lặp bằng cách sử dụng Map với ID làm key
+				const uniqueFriends = Array.from(
+					new Map(friends.map((friend) => [friend.id, friend])).values(),
+				)
+				setRecommendedFriends(uniqueFriends)
+			})
 			.catch((error) => {
 				console.error("Error fetching recommended friends:", error)
 				toast.error("Failed to load recommended friends")
+			})
+			.finally(() => {
+				//setIsLoading(false)
 			})
 	}, [])
 
