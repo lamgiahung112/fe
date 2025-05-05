@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom"
 import { SiteHeader } from "@/components/site-header"
 import { useRoutes } from "react-router-dom"
 import { TailwindIndicator } from "./components/tailwind-indicator"
@@ -9,7 +10,7 @@ import Authenticated from "./pages/authenticated"
 import UserDetailPage from "./pages/user-detail"
 import HomePage from "./pages/home"
 import SearchPage from "./pages/search"
-import ForgetPasswordPage from "@/pages/forget_password.tsx";
+import ForgetPasswordPage from "@/pages/forget_password.tsx"
 import MessengerPage from "@/pages/messenger.tsx"
 import PostPage from "@/pages/post.tsx"
 import { useEffect } from "react"
@@ -52,9 +53,7 @@ const routes = [
 	},
 	{
 		path: "/forget_password",
-		element: (
-			<ForgetPasswordPage />
-		),
+		element: <ForgetPasswordPage />,
 	},
 	{
 		path: "/messenger",
@@ -62,28 +61,31 @@ const routes = [
 			<Authenticated>
 				<MessengerPage />
 			</Authenticated>
-		)
+		),
 	},
 	{
 		path: "/post",
-		element: (
-			<PostPage />
-		)
-	}
+		element: <PostPage />,
+	},
 ]
 
 function App() {
 	const children = useRoutes(routes)
+	const location = useLocation()
 
 	useEffect(() => {
 		whoamiApi()
 	}, [])
 
+	// Những route không cần hiển thị Header
+	const hideHeaderRoutes = ["/login", "/register", "/forget_password"]
+	const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname)
+
 	return (
 		<>
 			<ToastContainer position="top-center" />
 			<div className="relative flex min-h-screen flex-col">
-				<SiteHeader />
+				{shouldShowHeader && <SiteHeader />}
 				{children}
 			</div>
 			<TailwindIndicator />

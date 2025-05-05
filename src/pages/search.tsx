@@ -33,16 +33,16 @@ function SearchPage() {
 	}
 
 	return (
-		<div className="container mx-auto p-4">
-			<div className="text-lg font-medium">
+		<div className="container mx-auto p-4 bg-white dark:bg-gray-900 min-h-screen">
+			<div className="text-lg font-medium text-gray-800 dark:text-gray-100">
 				Search result for keyword: {keyword}
 			</div>
 			<div className="mt-4 grid grid-cols-2 gap-4">
-				<div className="rounded bg-gray-100 p-4 text-center">
+				<div className="rounded bg-gray-100 dark:bg-gray-800 p-4 text-center text-gray-800 dark:text-gray-100">
 					<h3>Users Matched</h3>
 					<p>{usersByName?.length + (userByUsername ? 1 : 0)}</p>
 				</div>
-				<div className="rounded bg-gray-100 p-4 text-center">
+				<div className="rounded bg-gray-100 dark:bg-gray-800 p-4 text-center text-gray-800 dark:text-gray-100">
 					<h3>Posts Matched</h3>
 					<p>{postsByCaption?.length ?? 0}</p>
 				</div>

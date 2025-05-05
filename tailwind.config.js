@@ -10,7 +10,7 @@ export default {
 		"./app/**/*.{ts,tsx}",
 		"./src/**/*.{ts,tsx}",
 	],
-	darkMode: ["class"],
+	darkMode: "class",
 	theme: {
 		container: {
 			center: true,
