@@ -53,6 +53,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useNavigate } from "react-router-dom"
 
 // Header component for conversation list
 const ConversationHeader: React.FC = () => {
@@ -656,6 +657,7 @@ const MessageHeader: React.FC<MessageHeaderProps> = ({
 	onBack,
 	isMobile,
 }) => {
+	const navigate = useNavigate()
 	const [isPopupOpen, setIsPopupOpen] = useState(false)
 	const [activeDialog, setActiveDialog] = useState<string | null>(null)
 	const { user: currentUser } = useUser()
@@ -779,7 +781,12 @@ const MessageHeader: React.FC<MessageHeaderProps> = ({
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<Button variant="ghost" size="icon" className="rounded-full">
+							<Button
+								onClick={() => navigate(`/videocall/${conversation.id}`)}
+								variant="ghost"
+								size="icon"
+								className="rounded-full"
+							>
 								<Video size={18} />
 								<span className="sr-only">Video call</span>
 							</Button>

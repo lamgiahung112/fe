@@ -15,6 +15,7 @@ import MessengerPage from "@/pages/messenger.tsx"
 import PostPage from "@/pages/post.tsx"
 import { useEffect } from "react"
 import whoamiApi from "@/apis/whoami.ts"
+import VideoCallPage from "./pages/video-call"
 
 const routes = [
 	{ path: "/login", element: <LoginPage /> },
@@ -66,6 +67,14 @@ const routes = [
 	{
 		path: "/post",
 		element: <PostPage />,
+	},
+	{
+		path: "/videocall/:convId",
+		element: (
+			<Authenticated>
+				<VideoCallPage />
+			</Authenticated>
+		),
 	},
 ]
 
